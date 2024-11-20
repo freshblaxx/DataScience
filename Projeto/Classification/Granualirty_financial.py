@@ -54,7 +54,7 @@ if __name__ == "__main__":
     data = read_csv(filename, na_values="")
 
     # Encode nominal variables
-    nominal_vars = ["column1", "column2"]  # Replace with actual column names
+    nominal_vars = ["Company", "Time"]  # Replace with actual column names
     data, encoders = encode_nominal_variables(data, nominal_vars)
 
     # Derive date variables
