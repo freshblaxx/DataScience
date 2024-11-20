@@ -7,8 +7,8 @@ import pandas as pd
 
 
 
-filename = "class_financial distress.csv"
-file_tag = "financial"
+filename = "class_ny_arrests.csv"
+file_tag = "arrests"
 
 data: DataFrame = read_csv(filename, na_values="")
 print(data.shape)
@@ -102,31 +102,55 @@ plt.show()
 
 # Boxplots for each variable
 
-def plot_individual_boxplots(data, numeric_columns):
-     for column in numeric_columns:
-         plt.figure(figsize=(6, 4)) 
-         plt.boxplot(data[column].dropna()) 
-         plt.title(f'Boxplot for {column}')  
-         plt.xlabel(column)  
-         plt.ylabel('Values')  
-         plt.tight_layout() 
-         plt.show() 
+def plot_combined_boxplots(data, numeric_columns, file_tag):
+    num_plots = len(numeric_columns)
+    num_cols = 3  # Number of columns in the grid
+    num_rows = (num_plots + num_cols - 1) // num_cols  # Calculate the number of rows needed
 
-plot_individual_boxplots(data, numeric_columns)
+    fig, axes = plt.subplots(num_rows, num_cols, figsize=(15, num_rows * 5))
+    axes = axes.flatten()  # Flatten the axes array for easy iteration
+
+    for i, column in enumerate(numeric_columns):
+        axes[i].boxplot(data[column].dropna())
+        axes[i].set_title(f'Boxplot for {column}')
+        axes[i].set_xlabel(column)
+        axes[i].set_ylabel('Values')
+
+    # Remove any empty subplots
+    for j in range(i + 1, len(axes)):
+        fig.delaxes(axes[j])
+
+    plt.tight_layout()
+    plt.savefig(f"projeto/charts/all_boxplots_{file_tag}.png")
+    plt.show()
+
+plot_combined_boxplots(data, numeric_columns, file_tag)
 
 # Histograms for each variable
 
-def plot_histograms(data, numeric_columns):
-     for column in numeric_columns:
-         plt.figure(figsize=(6, 4)) 
-         data[column].hist(bins=30, color='skyblue', edgecolor='black')  
-         plt.title(f"Histogram for {column}")
-         plt.xlabel(column)
-         plt.ylabel("Frequency")
-         plt.tight_layout()  
-         plt.show()
+def plot_combined_histograms(data, numeric_columns, file_tag):
+    num_plots = len(numeric_columns)
+    num_cols = 3  # Number of columns in the grid
+    num_rows = (num_plots + num_cols - 1) // num_cols  # Calculate the number of rows needed
 
-plot_histograms(data, numeric_columns)
+    fig, axes = plt.subplots(num_rows, num_cols, figsize=(15, num_rows * 5))
+    axes = axes.flatten()  # Flatten the axes array for easy iteration
+
+    for i, column in enumerate(numeric_columns):
+        data[column].hist(bins=30, color='skyblue', edgecolor='black', ax=axes[i])
+        axes[i].set_title(f"Histogram for {column}")
+        axes[i].set_xlabel(column)
+        axes[i].set_ylabel("Frequency")
+
+    # Remove any empty subplots
+    for j in range(i + 1, len(axes)):
+        fig.delaxes(axes[j])
+
+    plt.tight_layout()
+    plt.savefig(f"projeto/charts/all_histograms_{file_tag}.png")
+    plt.show()
+
+plot_combined_histograms(data, numeric_columns, file_tag)
 
 # Number of outliers per variable
 
