@@ -189,49 +189,73 @@ def plot_outliers_count(outliers_count, title="Number of Outliers per Variable")
 plot_outliers_count(outlier_count)
 
 # Compute known distributions
-def compute_known_distributions(x_values: list) -> dict:
-    distributions = dict()
+# def compute_known_distributions(x_values: list) -> dict:
+#     distributions = dict()
 
-    # Gaussian (Normal) Distribution
-    mean, sigma = norm.fit(x_values)
-    distributions["Normal(%.1f, %.2f)" % (mean, sigma)] = norm.pdf(np.linspace(min(x_values), max(x_values), 1000), mean, sigma)
+#     # Gaussian (Normal) Distribution
+#     mean, sigma = norm.fit(x_values)
+#     distributions["Normal(%.1f, %.2f)" % (mean, sigma)] = norm.pdf(np.linspace(min(x_values), max(x_values), 1000), mean, sigma)
 
-    # Exponential Distribution
-    loc, scale = expon.fit(x_values)
-    distributions["Exp(%.2f)" % (1 / scale)] = expon.pdf(np.linspace(min(x_values), max(x_values), 1000), loc, scale)
+#     # Exponential Distribution
+#     loc, scale = expon.fit(x_values)
+#     distributions["Exp(%.2f)" % (1 / scale)] = expon.pdf(np.linspace(min(x_values), max(x_values), 1000), loc, scale)
 
-    # Log-Normal Distribution
-    sigma, loc, scale = lognorm.fit(x_values)
-    distributions["LogNor(%.1f, %.2f)" % (np.log(scale), sigma)] = lognorm.pdf(np.linspace(min(x_values), max(x_values), 1000), sigma, loc, scale)
+#     # Log-Normal Distribution
+#     sigma, loc, scale = lognorm.fit(x_values)
+#     distributions["LogNor(%.1f, %.2f)" % (np.log(scale), sigma)] = lognorm.pdf(np.linspace(min(x_values), max(x_values), 1000), sigma, loc, scale)
 
-    return distributions
+#     return distributions
 
 
-def histogram_with_distributions(ax, series, var):
-    values = series.sort_values().dropna().to_list()
+# def histogram_with_distributions(ax, series, var):
+#     values = series.sort_values().dropna().to_list()
 
-    # Plot histogram
-    ax.hist(values, density=True, color='skyblue', edgecolor='black')  
-    distributions = compute_known_distributions(values)
+#     # Plot histogram
+#     ax.hist(values, density=True, color='skyblue', edgecolor='black')  
+#     distributions = compute_known_distributions(values)
 
-    # Plot distribution fits
-    for label, distribution in distributions.items():
-        ax.plot(np.linspace(min(values), max(values), 1000), distribution, label=label, linestyle='-', linewidth=2)
+#     # Plot distribution fits
+#     for label, distribution in distributions.items():
+#         ax.plot(np.linspace(min(values), max(values), 1000), distribution, label=label, linestyle='-', linewidth=2)
     
-    ax.set_title(f"Best fit for {var}")
-    ax.set_xlabel(var)
-    ax.set_ylabel("Density")
-    ax.legend()
+#     ax.set_title(f"Best fit for {var}")
+#     ax.set_xlabel(var)
+#     ax.set_ylabel("Density")
+#     ax.legend()
 
 
-# Example of plotting for all numeric columns
-numeric_columns = data.select_dtypes(include=["number"]).columns
-if len(numeric_columns) > 0:
-    for column in numeric_columns:
-        # Create a new figure for each histogram
-        plt.figure(figsize=(8, 5))  # Adjust the size of each plot
-        histogram_with_distributions(plt.gca(), data[column], column)  # Use current axes (gca) for each plot
-        plt.tight_layout()  # Ensure the layout is not cropped
-        plt.show()  # Show each plot individually
+# # Example of plotting for all numeric columns
+# numeric_columns = data.select_dtypes(include=["number"]).columns
+# if len(numeric_columns) > 0:
+#     for column in numeric_columns:
+#         # Create a new figure for each histogram
+#         plt.figure(figsize=(8, 5))  # Adjust the size of each plot
+#         histogram_with_distributions(plt.gca(), data[column], column)  # Use current axes (gca) for each plot
+#         plt.tight_layout()  # Ensure the layout is not cropped
+#         plt.show()  # Show each plot individually
+# else:
+#     print("No numeric columns available.")
+
+# Ensure the target column exists in the dataset
+if "LAW_CAT_CD" in data.columns:
+    # Count the number of occurrences of each class
+    class_distribution = data["LAW_CAT_CD"].value_counts()
+
+    # Plot the distribution
+    plt.figure(figsize=(8, 6))
+    class_distribution.plot(kind='bar', color='skyblue', edgecolor='black')
+
+    # Add labels and title
+    plt.title("Class Distribution of Target Variable 'LAW_CAT_CD'", fontsize=14)
+    plt.xlabel("Class", fontsize=12)
+    plt.ylabel("Number of Records", fontsize=12)
+
+    # Annotate bar heights
+    for index, value in enumerate(class_distribution):
+        plt.text(index, value + 0.5, str(value), ha='center', fontsize=10)
+
+    # Show the plot
+    plt.tight_layout()
+    plt.show()
 else:
-    print("No numeric columns available.")
+    print("The column 'LAW_CAT_CD' is not present in the dataset.")
