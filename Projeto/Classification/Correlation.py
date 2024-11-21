@@ -17,7 +17,7 @@ numeric_columns = data.select_dtypes(include=["number"]).columns.tolist()
 corr_mtx = data[numeric_columns].corr().abs()
 
 # Ensure the output directory exists
-output_dir = "/Users/pascalludwig/Documents/Master/Semester 1/Term 2/Data Science/Project/DataScience/Projeto/Charts"
+output_dir = "/Users/Rodrigo/Documents/GitHub/DataScience/Projeto/Charts"
 os.makedirs(output_dir, exist_ok=True)
 
 # Create and save the heatmap of the correlation matrix
