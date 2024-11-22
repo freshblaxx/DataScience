@@ -5,8 +5,8 @@ from matplotlib.figure import Figure
 from matplotlib.pyplot import subplots, savefig, show
 import os
 
-file_tag = "finance"
-filename = "class_financial distress.csv"
+file_tag = "ny_arrests"
+filename = "class_ny_arrests.csv"
 
 data: DataFrame = read_csv(filename, na_values="")
 
@@ -44,8 +44,8 @@ if vars:
                     fig.delaxes(axs[i, j])
 
         plt.tight_layout()
-        os.makedirs("Projeto/charts", exist_ok=True)
-        savefig(f"Projeto/charts/{file_tag}_sparsity_study_chunk_{chunk_index + 1}.png")
+        os.makedirs("Projeto/Charts", exist_ok=True)
+        savefig(f"Projeto/Charts/{file_tag}_sparsity_study_chunk_{chunk_index + 1}.png")
         show()
 else:
     print("Sparsity class: there are no variables.")
