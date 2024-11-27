@@ -38,9 +38,9 @@ def determine_outlier_thresholds_for_var(
 
     return top, bottom
 
-file_tag = "Ny_Arrest"
+file_tag = "Financial_Alt1"
 data: DataFrame = read_csv(
-    "Projeto/Preparation/new_class_ny_arrests.csv", na_values="", parse_dates=True, dayfirst=True
+    "Projeto\Preparation\class_financial distress.csv", na_values="", parse_dates=True, dayfirst=True
 )
 print(f"Original data: {data.shape}")
 
