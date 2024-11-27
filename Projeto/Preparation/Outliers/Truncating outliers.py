@@ -38,7 +38,7 @@ def determine_outlier_thresholds_for_var(
 
     return top, bottom
 
-file_tag = "Ny_Arrest"
+file_tag = "Financial"
 data: DataFrame = read_csv(
     "Projeto\Preparation\class_financial distress.csv", na_values="", parse_dates=True, dayfirst=True
 )
@@ -46,16 +46,16 @@ print(f"Original data: {data.shape}")
 
 n_std: int = NR_STDEV
 numeric_vars: list[str] = get_variable_types(data)["numeric"]
-if numeric_vars is not None:
+if [] != numeric_vars:
     df: DataFrame = data.copy(deep=True)
-    summary5: DataFrame = data[numeric_vars].describe()
+    summary5 = data.describe()
     for var in numeric_vars:
-        top_threshold, bottom_threshold = determine_outlier_thresholds_for_var(
-            summary5[var]
+        top, bottom = determine_outlier_thresholds_for_var(summary5[var])
+        df[var] = df[var].apply(
+            lambda x: top if x > top else bottom if x < bottom else x
         )
-        outliers: Series = df[(df[var] > top_threshold) | (df[var] < bottom_threshold)]
-        df.drop(outliers.index, axis=0, inplace=True)
-    df.to_csv(f"Projeto\Preparation\Outliers/{file_tag}_drop_outliers.csv", index=True)
-    print(f"Data after dropping outliers: {df.shape}")
+    df.to_csv(f"Projeto\Preparation\Outliers/{file_tag}_truncate_outliers.csv", index=True)
+    print("Data after truncating outliers:", df.shape)
+    print(df.describe())
 else:
     print("There are no numeric variables")
