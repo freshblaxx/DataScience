@@ -4,7 +4,7 @@ from matplotlib.pyplot import subplots, show
 
 
 file = "Financial"
-data: DataFrame = read_csv("Projeto/Preparation/class_financial distress.csv", na_values="")
+data: DataFrame = read_csv("Projeto\Preparation\Outliers\Financial_Alt1_truncate_outliers.csv", na_values="")
 target = "CLASS"
 vars: list[str] = data.columns.to_list()
 target_data: Series = data.pop(target)
