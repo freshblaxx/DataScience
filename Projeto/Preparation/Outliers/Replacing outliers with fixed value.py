@@ -43,8 +43,8 @@ def determine_outlier_thresholds_for_var(
     return top, bottom
 
 # Load data
-file_tag = "Ny_Arrest"
-data: DataFrame = read_csv("/Users/tomifemme/Desktop/DataScience/Projeto/Preparation/Outliers/data_cleaned.csv", na_values="", parse_dates=True, dayfirst=True
+file_tag = "Financial"
+data: DataFrame = read_csv("Projeto\Preparation\class_financial distress.csv", na_values="", parse_dates=True, dayfirst=True
 )
 print(f"Original data: {data.shape}")
 
@@ -60,7 +60,7 @@ if [] != numeric_vars:
         df[var] = df[var].apply(lambda x: median if x > top or x < bottom else x)
     
     # Save cleaned data
-    df.to_csv("{file_tag}_replacing_outliers.csv", index=True)
+    df.to_csv(f"Projeto\Preparation\Outliers/{file_tag}_replacing_outliers.csv", index=False)
     print("Data after replacing outliers:", df.shape)
     print(df.describe())
 else:

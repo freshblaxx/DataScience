@@ -38,9 +38,9 @@ def determine_outlier_thresholds_for_var(
 
     return top, bottom
 
-file_tag = "Financial_Alt1"
+file_tag = "Financial_Training"
 data: DataFrame = read_csv(
-    "/Users/dominikfrank/Desktop/University/Master/Semester 1/PII/Data Science/Code for Project/DataScience/class_financial distress.csv", na_values="", parse_dates=True, dayfirst=True
+    "Projeto\Preparation\class_financial distress.csv", na_values="", parse_dates=True, dayfirst=True
 )
 print(f"Original data: {data.shape}")
 
@@ -54,7 +54,7 @@ if [] != numeric_vars:
         df[var] = df[var].apply(
             lambda x: top if x > top else bottom if x < bottom else x
         )
-    df.to_csv(f"/Users/dominikfrank/Desktop/University/Master/Semester 1/PII/Data Science/Code for Project/DataScience/Projeto/Preparation/{file_tag}_truncate_outliers_financial.csv", index=True)
+    df.to_csv(f"Projeto\Preparation\Outliers\{file_tag}_truncate_outliers_financial.csv", index=False)
     print("Data after truncating outliers:", df.shape)
     print(df.describe())
 else:
