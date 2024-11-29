@@ -128,7 +128,7 @@ def evaluate_approach(
 
 
 target = "LAW_CAT_CD"
-file_tag = "missing_values2"
+file_tag = "minMax"
 train: DataFrame = read_csv("/Users/tomifemme/Desktop/DataScience/Projeto/Preparation/Eval_for_Preparation/Arrests_training_data.csv")
 test: DataFrame = read_csv("/Users/tomifemme/Desktop/DataScience/Projeto/Preparation/Eval_for_Preparation/Arrests_testing_data.csv")
 

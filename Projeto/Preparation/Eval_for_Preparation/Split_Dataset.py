@@ -4,8 +4,7 @@ from sklearn.model_selection import train_test_split
 
 
 file_tag = "Arrests"
-data: DataFrame = read_csv(
-    "/Users/tomifemme/Desktop/DataScience/Projeto/Preparation/Eval_for_Preparation/data_filled.csv", na_values="", parse_dates=True, dayfirst=True
+data: DataFrame = read_csv("/Users/tomifemme/Desktop/DataScience/Projeto/Preparation/Eval_for_Preparation/Scalingarrests_scaled_minmax.csv", na_values="", parse_dates=True, dayfirst=True
 )
 
 df: DataFrame = data.copy(deep=True)
@@ -19,7 +18,6 @@ X_train, X_test, y_train, y_test = train_test_split(
 
 train_data = pd.concat([X_train, y_train], axis=1)  # Combine features and target for training data
 test_data = pd.concat([X_test, y_test], axis=1)  # Combine features and target for testing data
-
 # Save the splits to new files without altering the original
 train_data.to_csv(f"{file_tag}_training_data.csv", index=False)
 test_data.to_csv(f"{file_tag}_testing_data.csv", index=False)

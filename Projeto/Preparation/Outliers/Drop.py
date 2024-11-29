@@ -40,7 +40,7 @@ def determine_outlier_thresholds_for_var(
 
 file_tag = "Financial"
 data: DataFrame = read_csv(
-    "Projeto\Preparation\class_financial distress.csv", na_values="", parse_dates=True, dayfirst=True
+    "/Users/tomifemme/Desktop/DataScience/Projeto/Preparation/Outliers/data_cleaned.csv", na_values="", parse_dates=True, dayfirst=True
 )
 print(f"Original data: {data.shape}")
 
@@ -55,7 +55,7 @@ if numeric_vars is not None:
         )
         outliers: Series = df[(df[var] > top_threshold) | (df[var] < bottom_threshold)]
         df.drop(outliers.index, axis=0, inplace=True)
-    df.to_csv(f"Projeto\Preparation\Outliers/{file_tag}_drop_outliers.csv", index=False)
+    df.to_csv(f"/Users/tomifemme/Desktop/DataScience/Projeto/Preparation/Outliers{file_tag}_drop_outliers_cleaned_arrests.csv", index=False)
     print(f"Data after dropping outliers: {df.shape}")
 else:
     print("There are no numeric variables")
