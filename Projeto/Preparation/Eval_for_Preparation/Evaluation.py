@@ -111,7 +111,7 @@ def plot_multibar_chart(
     return ax
 
 def evaluate_approach(
-    train: DataFrame, test: DataFrame, target: str = "class", metric: str = "accuracy"
+    train: DataFrame, test: DataFrame, target: str = "LAW_CAT_CD", metric: str = "accuracy"
 ) -> dict[str, list]:
     trnY = train.pop(target).values
     trnX: ndarray = train.values
@@ -127,15 +127,15 @@ def evaluate_approach(
     return eval
 
 
-target = "CLASS"
-file_tag = "Financial_Outliers_Drop"
-train: DataFrame = read_csv("Financial__outliers_drop_training_data.csv")
-test: DataFrame = read_csv("Financial__outliers_drop_testing_data.csv")
+target = "LAW_CAT_CD"
+file_tag = "missing_values2"
+train: DataFrame = read_csv("/Users/tomifemme/Desktop/DataScience/Projeto/Preparation/Eval_for_Preparation/Arrests_training_data.csv")
+test: DataFrame = read_csv("/Users/tomifemme/Desktop/DataScience/Projeto/Preparation/Eval_for_Preparation/Arrests_testing_data.csv")
 
 figure()
 eval: dict[str, list] = evaluate_approach(train, test, target=target, metric="recall")
 plot_multibar_chart(
     ["NB", "KNN"], eval, title=f"{file_tag} evaluation", percentage=True
 )
-savefig(f"Projeto/Images/{file_tag}_eval.png")
+savefig(f"Projeto/{file_tag}_eval.png")
 show()

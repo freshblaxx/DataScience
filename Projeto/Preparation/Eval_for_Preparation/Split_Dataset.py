@@ -3,15 +3,15 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 
 
-file_tag = "Financial__outliers_truncate"
+file_tag = "Arrests"
 data: DataFrame = read_csv(
-    "Projeto\Preparation\Outliers\Financial_Training_truncate_outliers_financial.csv", na_values="", parse_dates=True, dayfirst=True
+    "/Users/tomifemme/Desktop/DataScience/Projeto/Preparation/Eval_for_Preparation/data_filled.csv", na_values="", parse_dates=True, dayfirst=True
 )
 
 df: DataFrame = data.copy(deep=True)
 
-X = df.drop(columns=['CLASS'])  # Features
-y = df['CLASS']
+X = df.drop(columns=['LAW_CAT_CD'])  # Features
+y = df['LAW_CAT_CD']  # Target
 
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.30, random_state=42
