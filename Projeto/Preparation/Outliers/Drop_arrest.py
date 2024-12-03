@@ -19,6 +19,8 @@ def get_variable_types(df: DataFrame) -> dict[str, list]:
 def determine_outlier_thresholds_for_var(
     summary5: Series, std_based: bool = True, threshold: float = NR_STDEV
 ) -> tuple[float, float]:
+    top: float = 0
+    bottom: float = 0
     if std_based:
         std: float = threshold * summary5["std"]
         top = summary5["mean"] + std
@@ -28,32 +30,28 @@ def determine_outlier_thresholds_for_var(
         bottom = summary5["25%"]
     return bottom, top
 
-def replace_outliers_with_median(df: DataFrame, variable_types: dict[str, list]) -> DataFrame:
+def drop_outliers(df: DataFrame, variable_types: dict[str, list]) -> DataFrame:
     outliers_info = {}
     for col in variable_types["numeric"]:
         summary = df[col].describe()
         bottom, top = determine_outlier_thresholds_for_var(summary)
-        median: float = df[col].median()
-
-        # Replace outliers with the median
-        outliers_count = ((df[col] < bottom) | (df[col] > top)).sum()
-        outliers_info[col] = outliers_count
-        df[col] = df[col].apply(lambda x: median if x > top or x < bottom else x)
-
+        outliers = df[(df[col] < bottom) | (df[col] > top)]
+        outliers_info[col] = len(outliers)
+        df = df[~((df[col] < bottom) | (df[col] > top))]
     return df, outliers_info
 
 # Example usage
 data: DataFrame = read_csv("/Users/tomifemme/Desktop/DataScience/Projeto/Preparation/Outliers/data_cleaned.csv")
 
 variable_types = get_variable_types(data)
-print("Variable Types:", variable_types)
+print(variable_types)
 
-cleaned_data, outliers_info = replace_outliers_with_median(data, variable_types)
+cleaned_data, outliers_info = drop_outliers(data, variable_types)
 
 # Print outliers information
 for col, count in outliers_info.items():
-    print(f"Column '{col}': {count} outliers replaced out of {len(data)} total entries")
+    print(f"Column '{col}': {count} outliers dropped out of {len(data)} total entries")
 
 # Save the cleaned data to a new CSV file
-cleaned_data.to_csv("Outliers_replaced_arrests.csv", index=False)
-print(f"Cleaned data saved to 'Outliers_replaced_arrests.csv'")
+cleaned_data.to_csv("Outliers_dropped_arrests.csv", index=False)
+print(f"Cleaned data saved to 'Outliers_dropped_arrests.csv'")
