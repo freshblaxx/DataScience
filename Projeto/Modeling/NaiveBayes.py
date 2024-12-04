@@ -98,7 +98,6 @@ def set_chart_labels(ax: Axes, title: str = "", xlabel: str = "", ylabel: str = 
     ax.set_ylabel(ylabel)
     return ax
 
-
 def set_chart_xticks(xvalues: list[str | int | float | datetime], ax: Axes, percentage: bool = False) -> Axes:
     if len(xvalues) > 0:
         if percentage:
