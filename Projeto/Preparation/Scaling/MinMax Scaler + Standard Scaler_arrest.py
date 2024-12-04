@@ -5,7 +5,7 @@ from matplotlib.pyplot import gca,savefig
 
 
 file = "arrests"
-data: DataFrame = read_csv("/Users/tomifemme/Desktop/DataScience/Projeto/Preparation/Scaling/Outliers_replaced_arrests.csv")
+data: DataFrame = read_csv("/Users/tomifemme/Desktop/DataScience/Projeto/Preparation/Scaling/Outliers_dropped_arrests.csv")
 target = "CLASS"
 target_data: Series = data.pop(target)
 

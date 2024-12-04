@@ -4,7 +4,7 @@ from sklearn.model_selection import train_test_split
 
 
 file_tag = "Arrests"
-data: DataFrame = read_csv("/Users/tomifemme/Desktop/DataScience/Projeto/Preparation/Eval_for_Preparation/data_filled.csv"
+data: DataFrame = read_csv("/Users/tomifemme/Desktop/DataScience/Projeto/Preparation/Eval_for_Preparation/arrests_scaled_zscore_arrest.csv"
 )
 
 df: DataFrame = data.copy(deep=True)
