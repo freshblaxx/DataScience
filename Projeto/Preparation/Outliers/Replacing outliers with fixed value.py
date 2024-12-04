@@ -1,59 +1,67 @@
-from pandas import read_csv, DataFrame, Series, to_numeric
+from pandas import read_csv, DataFrame, Series, to_numeric, to_datetime
 
+# Define constants
 NR_STDEV: int = 2
 
+# Function to classify variable types
 def get_variable_types(df: DataFrame) -> dict[str, list]:
-    variable_types: dict = {"numeric": [], "binary": []}
+    variable_types: dict = {"numeric": [], "binary": [], "date": [], "symbolic": []}
 
     nr_values: Series = df.nunique(axis=0, dropna=True)
     for c in df.columns:
-        if 2 == nr_values[c] and set(df[c].dropna().unique()).issubset({0, 1}):
+        if 2 == nr_values[c]:
             variable_types["binary"].append(c)
-            df[c] = df[c].astype("bool")
+            df[c].astype("bool")
         else:
-            to_numeric(df[c], errors="raise")
-            variable_types["numeric"].append(c)
+            try:
+                to_numeric(df[c], errors="raise")
+                variable_types["numeric"].append(c)
+            except ValueError:
+                try:
+                    df[c] = to_datetime(df[c], errors="raise")
+                    variable_types["date"].append(c)
+                except ValueError:
+                    variable_types["symbolic"].append(c)
 
     return variable_types
 
+# Function to determine outlier thresholds
 def determine_outlier_thresholds_for_var(
     summary5: Series, std_based: bool = True, threshold: float = NR_STDEV
 ) -> tuple[float, float]:
+    top: float = 0
+    bottom: float = 0
     if std_based:
         std: float = threshold * summary5["std"]
         top = summary5["mean"] + std
         bottom = summary5["mean"] - std
     else:
-        top = summary5["75%"]
-        bottom = summary5["25%"]
-    return bottom, top
+        iqr: float = threshold * (summary5["75%"] - summary5["25%"])
+        top = summary5["75%"] + iqr
+        bottom = summary5["25%"] - iqr
 
-def replace_outliers_with_median(df: DataFrame, variable_types: dict[str, list]) -> DataFrame:
-    outliers_info = {}
-    for col in variable_types["numeric"]:
-        summary = df[col].describe()
-        bottom, top = determine_outlier_thresholds_for_var(summary)
-        median: float = df[col].median()
+    return top, bottom
 
-        # Replace outliers with the median
-        outliers_count = ((df[col] < bottom) | (df[col] > top)).sum()
-        outliers_info[col] = outliers_count
-        df[col] = df[col].apply(lambda x: median if x > top or x < bottom else x)
+# Load data
+file_tag = "Financial"
+data: DataFrame = read_csv("/Users/tomifemme/Desktop/DataScience/Projeto/Preparation/Outliers/data_cleaned.csv", na_values="", parse_dates=True, dayfirst=True
+)
+print(f"Original data: {data.shape}")
 
-    return df, outliers_info
+# Get numeric variables
+numeric_vars: list[str] = get_variable_types(data)["numeric"]
 
-# Example usage
-data: DataFrame = read_csv("/Users/tomifemme/Desktop/DataScience/Projeto/Preparation/Outliers/data_cleaned.csv")
-
-variable_types = get_variable_types(data)
-print("Variable Types:", variable_types)
-
-cleaned_data, outliers_info = replace_outliers_with_median(data, variable_types)
-
-# Print outliers information
-for col, count in outliers_info.items():
-    print(f"Column '{col}': {count} outliers replaced out of {len(data)} total entries")
-
-# Save the cleaned data to a new CSV file
-cleaned_data.to_csv("Outliers_replaced_arrests.csv", index=False)
-print(f"Cleaned data saved to 'Outliers_replaced_arrests.csv'")
+if [] != numeric_vars:
+    df: DataFrame = data.copy(deep=True)
+    summary5 = data.describe()  # Compute summary statistics for numeric variables
+    for var in numeric_vars:
+        top, bottom = determine_outlier_thresholds_for_var(summary5[var])  # Pass summary statistics
+        median: float = df[var].median()
+        df[var] = df[var].apply(lambda x: median if x > top or x < bottom else x)
+    
+    # Save cleaned data
+    df.to_csv(f"/Users/tomifemme/Desktop/DataScience/Projeto/Preparation/Outliers{file_tag}_replacing_outliers_cleaned.csv", index=False)
+    print("Data after replacing outliers:", df.shape)
+    print(df.describe())
+else:
+    print("There are no numeric variables")
