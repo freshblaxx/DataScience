@@ -7,8 +7,8 @@ import pandas as pd
 
 
 
-filename = "class_ny_arrests.csv"
-file_tag = "arrests"
+filename = "Projeto\Preparation\class_financial distress.csv"
+file_tag = "Financial"
 
 data: DataFrame = read_csv(filename, na_values="")
 print(data.shape)
@@ -121,7 +121,7 @@ def plot_combined_boxplots(data, numeric_columns, file_tag):
         fig.delaxes(axes[j])
 
     plt.tight_layout()
-    plt.savefig(f"projeto/charts/all_boxplots_{file_tag}.png")
+    plt.savefig(f"Projeto/fotosDebug/all_boxplots_{file_tag}.png")
     plt.show()
 
 plot_combined_boxplots(data, numeric_columns, file_tag)
@@ -147,7 +147,7 @@ def plot_combined_histograms(data, numeric_columns, file_tag):
         fig.delaxes(axes[j])
 
     plt.tight_layout()
-    plt.savefig(f"projeto/charts/all_histograms_{file_tag}.png")
+    plt.savefig(f"Projeto\fotosDebug/all_histograms_{file_tag}.png")
     plt.show()
 
 plot_combined_histograms(data, numeric_columns, file_tag)
@@ -237,16 +237,16 @@ else:
     print("No numeric columns available.")
 
 # Ensure the target column exists in the dataset
-if "LAW_CAT_CD" in data.columns:
+if "CLASS" in data.columns:
     # Count the number of occurrences of each class
-    class_distribution = data["LAW_CAT_CD"].value_counts()
+    class_distribution = data["CLASS"].value_counts()
 
     # Plot the distribution
     plt.figure(figsize=(8, 6))
     class_distribution.plot(kind='bar', color='skyblue', edgecolor='black')
 
     # Add labels and title
-    plt.title("Class Distribution of Target Variable 'LAW_CAT_CD'", fontsize=14)
+    plt.title("Class Distribution of Target Variable 'CLASS'", fontsize=14)
     plt.xlabel("Class", fontsize=12)
     plt.ylabel("Number of Records", fontsize=12)
 
@@ -258,4 +258,4 @@ if "LAW_CAT_CD" in data.columns:
     plt.tight_layout()
     plt.show()
 else:
-    print("The column 'LAW_CAT_CD' is not present in the dataset.")
+    print("The column 'CLASS' is not present in the dataset.")

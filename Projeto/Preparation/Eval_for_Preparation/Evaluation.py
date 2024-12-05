@@ -16,7 +16,7 @@ from matplotlib.axes import Axes
 from matplotlib.pyplot import gca,savefig
 
 
-DELTA_IMPROVE: float = 0.001
+DELTA_IMPROVE: float = 0
 FONT_SIZE = 6
 FONT_TEXT = FontProperties(size=FONT_SIZE)
 CLASS_EVAL_METRICS: dict[str, Callable] = {
@@ -46,7 +46,7 @@ def run_KNN(trnX, trnY, tstX, tstY, metric="accuracy") -> dict[str, float]:
             eval[key] = CLASS_EVAL_METRICS[key](tstY, prd)
     return eval
 
-def run_NB(trnX, trnY, tstX, tstY, metric: str = "accuracy") -> dict[str, float]:
+def run_NB(trnX, trnY, tstX, tstY, metric= "accuracy") -> dict[str, float]:
     estimators: dict[str, GaussianNB | BernoulliNB] = {
         "GaussianNB": GaussianNB(),
         "BernoulliNB": BernoulliNB(),
@@ -56,16 +56,22 @@ def run_NB(trnX, trnY, tstX, tstY, metric: str = "accuracy") -> dict[str, float]
     eval: dict[str, float] = {}
 
     for clf in estimators:
+        
         estimators[clf].fit(trnX, trnY)
         prdY: ndarray = estimators[clf].predict(tstX)
         performance: float = CLASS_EVAL_METRICS[metric](tstY, prdY)
-        if performance - best_performance > DELTA_IMPROVE:
+        
+        if performance - best_performance >= DELTA_IMPROVE:
             best_performance = performance
             best_model = estimators[clf]
+
     if best_model is not None:
+        
         prd: ndarray = best_model.predict(tstX)
         for key in CLASS_EVAL_METRICS:
             eval[key] = CLASS_EVAL_METRICS[key](tstY, prd)
+    
+    
     return eval
 
 def set_chart_labels(ax: Axes, title: str = "", xlabel: str = "", ylabel: str = "") -> Axes:
@@ -91,6 +97,7 @@ def plot_multibar_chart(
     bar_labels: list = list(yvalues.keys())
 
     # This is the location for each bar
+  
     index: ndarray = arange(len(group_labels))
     bar_width: float = 0.8 / len(bar_labels)
     ax.set_xticks(index + bar_width / 2, labels=group_labels)
@@ -111,7 +118,7 @@ def plot_multibar_chart(
     return ax
 
 def evaluate_approach(
-    train: DataFrame, test: DataFrame, target: str = "LAW_CAT_CD", metric: str = "accuracy"
+    train: DataFrame, test: DataFrame, target: str = "CLASS", metric: str = "accuracy"
 ) -> dict[str, list]:
     trnY = train.pop(target).values
     trnX: ndarray = train.values
@@ -127,10 +134,10 @@ def evaluate_approach(
     return eval
 
 
-target = "LAW_CAT_CD"
-file_tag = "minMax"
-train: DataFrame = read_csv("/Users/tomifemme/Desktop/DataScience/Projeto/Preparation/Eval_for_Preparation/Arrests_training_data.csv")
-test: DataFrame = read_csv("/Users/tomifemme/Desktop/DataScience/Projeto/Preparation/Eval_for_Preparation/Arrests_testing_data.csv")
+target = "CLASS"
+file_tag = "Fianncial"
+train: DataFrame = read_csv("Financial_training_data.csv")
+test: DataFrame = read_csv("Financial_testing_data.csv")
 
 figure()
 eval: dict[str, list] = evaluate_approach(train, test, target=target, metric="recall")
@@ -139,3 +146,5 @@ plot_multibar_chart(
 )
 savefig(f"Projeto/{file_tag}_eval.png")
 show()
+
+
