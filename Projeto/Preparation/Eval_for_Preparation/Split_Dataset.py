@@ -3,14 +3,14 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 
 
-file_tag = "Arrests"
-data: DataFrame = read_csv("/Users/tomifemme/Desktop/DataScience/Projeto/Preparation/Eval_for_Preparation/Scalingarrests_scaled_minmax.csv", na_values="", parse_dates=True, dayfirst=True
+file_tag = "Financial"
+data: DataFrame = read_csv("/Users/dominikfrank/Desktop/University/Master/Semester 1/PII/Data Science/Code for Project/DataScience/Projeto/Preparation/Data Balancing/class_financial_over.csv", na_values="", parse_dates=True, dayfirst=True
 )
 
 df: DataFrame = data.copy(deep=True)
 
-X = df.drop(columns=['LAW_CAT_CD'])  # Features
-y = df['LAW_CAT_CD']  # Target
+X = df.drop(columns=['CLASS'])  # Features
+y = df['CLASS']  # Target
 
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.30, random_state=42

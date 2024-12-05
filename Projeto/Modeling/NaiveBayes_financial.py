@@ -235,8 +235,8 @@ def read_train_test_from_files(
     return trnX, tstX, trnY, tstY, labels, train.columns.to_list()
 
 file_tag = "Financial"
-train_filename = "Financial_training_data.csv"
-test_filename = "Financial_testing_data.csv"
+train_filename = "/Users/dominikfrank/Desktop/University/Master/Semester 1/PII/Data Science/Code for Project/DataScience/Projeto/Modeling/sampled_train_data.csv"
+test_filename = "/Users/dominikfrank/Desktop/University/Master/Semester 1/PII/Data Science/Code for Project/DataScience/Projeto/Modeling/sampled_test_data.csv"
 target = "CLASS"
 eval_metric = "accuracy"
 
@@ -286,17 +286,17 @@ def naive_Bayes_study(
 
 figure()
 best_model, params = naive_Bayes_study(trnX, trnY, tstX, tstY, eval_metric)
-savefig(f"Projeto\Images/{file_tag}_nb_{eval_metric}_study.png")
+savefig(f"/Users/dominikfrank/Desktop/University/Master/Semester 1/PII/Data Science/Code for Project/DataScience/Projeto/Modeling/images{file_tag}_nb_{eval_metric}_study.png")
 show()
 
 figure()
 best_model, params = naive_Bayes_study(trnX, trnY, tstX, tstY, "recall")
-savefig(f"Projeto\Images/{file_tag}_nb_recall_study.png")
+savefig(f"/Users/dominikfrank/Desktop/University/Master/Semester 1/PII/Data Science/Code for Project/DataScience/Projeto/Modeling/images{file_tag}_nb_recall_study.png")
 show()
 
 prd_trn: array = best_model.predict(trnX)
 prd_tst: array = best_model.predict(tstX)
 figure()
 plot_evaluation_results(params, trnY, prd_trn, tstY, prd_tst, labels)
-savefig(f'Projeto\Images/{file_tag}_{params["name"]}_best_{params["metric"]}_eval.png')
+savefig(f'/Users/dominikfrank/Desktop/University/Master/Semester 1/PII/Data Science/Code for Project/DataScience/Projeto/Modeling/images{file_tag}_{params["name"]}_best_{params["metric"]}_eval.png')
 show()

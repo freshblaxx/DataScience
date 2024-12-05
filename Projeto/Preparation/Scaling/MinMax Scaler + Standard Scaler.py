@@ -4,9 +4,9 @@ from matplotlib.pyplot import subplots, show
 from matplotlib.pyplot import gca,savefig
 
 
-file = "arrests"
-data: DataFrame = read_csv("/Users/tomifemme/Desktop/DataScience/Projeto/Preparation/Scaling/OutliersFinancial_replacing_outliers_cleaned.csv", na_values="")
-target = "LAW_CAT_CD"
+file = "Financial"
+data: DataFrame = read_csv("/Users/dominikfrank/Desktop/University/Master/Semester 1/PII/Data Science/Code for Project/DataScience/Projeto/Preparation/Outliers/OutliersFinancial_replacing_outliers_cleaned.csv", na_values="")
+target = "CLASS"
 vars: list[str] = data.columns.to_list()
 target_data: Series = data.pop(target)
 
@@ -19,7 +19,7 @@ transf: StandardScaler = StandardScaler(with_mean=True, with_std=True, copy=True
 df_zscore = DataFrame(transf.transform(data), index=data.index)
 df_zscore[target] = target_data
 df_zscore.columns = vars
-df_zscore.to_csv(f"/Users/tomifemme/Desktop/DataScience/Projeto/Preparation/Scaling{file}_scaled_zscore_new.csv", index=False)
+df_zscore.to_csv(f"/Users/dominikfrank/Desktop/University/Master/Semester 1/PII/Data Science/Code for Project/DataScience/Projeto/Preparation/Scaling{file}_scaled_zscore_new.csv", index=False)
 
 
 # MinMax Scaler
@@ -27,7 +27,7 @@ transf: MinMaxScaler = MinMaxScaler(feature_range=(0, 1), copy=True).fit(data)
 df_minmax = DataFrame(transf.transform(data), index=data.index)
 df_minmax[target] = target_data
 df_minmax.columns = vars
-df_minmax.to_csv(f"/Users/tomifemme/Desktop/DataScience/Projeto/Preparation/Scaling{file}_scaled_minmax.csv", index=False)
+df_minmax.to_csv(f"/Users/dominikfrank/Desktop/University/Master/Semester 1/PII/Data Science/Code for Project/DataScience/Projeto/Preparation/Scaling{file}_scaled_minmax.csv", index=False)
 
 # Plots
 
