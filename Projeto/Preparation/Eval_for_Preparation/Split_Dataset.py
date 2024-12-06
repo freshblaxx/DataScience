@@ -4,7 +4,11 @@ from sklearn.model_selection import train_test_split
 
 
 file_tag = "Financial"
+<<<<<<< HEAD
 data: DataFrame = read_csv("/Users/dominikfrank/Desktop/University/Master/Semester 1/PII/Data Science/Code for Project/DataScience/Projeto/Preparation/Data Balancing/class_financial_over.csv", na_values="", parse_dates=True, dayfirst=True
+=======
+data: DataFrame = read_csv("Projeto\Preparation\Outliers\Financial_drop_outliers_cleaned_arrests.csv", na_values="", parse_dates=True, dayfirst=True
+>>>>>>> 49e94bb9eb1a5615fce9e7411d8fb6246b14a6a5
 )
 
 df: DataFrame = data.copy(deep=True)

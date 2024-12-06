@@ -54,7 +54,7 @@ def drop_outliers(
     return filtered_df, outliers_info
 
 # Example usage
-data: DataFrame = read_csv("/Users/tomifemme/Desktop/DataScience/Projeto/Preparation/Outliers/data_filled.csv")
+data: DataFrame = read_csv("/Users/tomifemme/Desktop/DataScience/Projeto/Preparation/Outliers/data_cleaned.csv")
 
 variable_types = get_variable_types(data)
 print("Variable types:", variable_types)
