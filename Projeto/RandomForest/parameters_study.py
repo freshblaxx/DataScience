@@ -289,9 +289,9 @@ def random_forests_study(
     return best_model, best_params
 
 
-file_tag = "financial"
-train_filename = "Financial_training_data.csv"
-test_filename = "Financial_testing_data.csv"
+file_tag = "arrest"
+train_filename = "class_arrests_SMOTE.csv"
+test_filename = "Arrests_testing_data.csv"
 target = "CLASS"
 eval_metric = "accuracy"
 
