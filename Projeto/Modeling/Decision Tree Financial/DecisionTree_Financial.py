@@ -1,11 +1,17 @@
-
+from typing import Literal
+from numpy import array, ndarray
+from sklearn.neighbors import KNeighborsClassifier
+from matplotlib.pyplot import figure, savefig, show
+from matplotlib.pyplot import figure, savefig
+from sklearn.tree import DecisionTreeClassifier
 from numpy import array, ndarray
 from pandas import DataFrame
 from pandas import read_csv
+from numpy import argsort
 from numpy import array, ndarray
 from sklearn.naive_bayes import GaussianNB, MultinomialNB, BernoulliNB
 from matplotlib.pyplot import figure, savefig, show
-
+from sklearn.tree import plot_tree
 from typing import Callable
 from numpy import array, ndarray
 from matplotlib.container import BarContainer
@@ -41,7 +47,36 @@ from sklearn.metrics import confusion_matrix, RocCurveDisplay, roc_auc_score
 from sklearn.naive_bayes import _BaseNB, GaussianNB, MultinomialNB, BernoulliNB
 from sklearn.neighbors import KNeighborsClassifier
 from matplotlib.colors import LinearSegmentedColormap
+from sklearn.tree import export_graphviz
+from matplotlib.pyplot import imread, imshow, axis
+from subprocess import call
+import os
 
+
+
+def plot_horizontal_bar_chart(
+    elements: list,
+    values: list,
+    error: list = [],
+    ax: Axes = None,  # type: ignore
+    title: str = "",
+    xlabel: str = "",
+    ylabel: str = "",
+    percentage: bool = False,
+) -> Axes:
+    if ax is None:
+        ax = gca()
+    if percentage:
+        ax.set_xlim((0, 1))
+    if error == []:
+        error = [0] * len(elements)
+    ax = set_chart_labels(ax=ax, title=title, xlabel=xlabel, ylabel=ylabel)
+    y_pos: list = list(arange(len(elements)))
+
+    ax.barh(y_pos, values, xerr=error, align="center", error_kw={"lw": 0.5, "ecolor": "r"})
+    ax.set_yticks(y_pos, labels=elements)
+    ax.invert_yaxis()  # labels read top-to-bottom
+    return ax
 
 my_palette = {
     "yellow": "#ECD474",
@@ -234,69 +269,165 @@ def read_train_test_from_files(
     tstX: ndarray = test.values
     return trnX, tstX, trnY, tstY, labels, train.columns.to_list()
 
-file_tag = "Financial"
-train_filename = "/Users/dominikfrank/Desktop/University/Master/Semester 1/PII/Data Science/Code for Project/DataScience/Projeto/Modeling/sampled_train_data.csv"
-test_filename = "/Users/dominikfrank/Desktop/University/Master/Semester 1/PII/Data Science/Code for Project/DataScience/Projeto/Modeling/sampled_test_data.csv"
-target = "CLASS"
-eval_metric = "accuracy"
+def plot_multiline_chart(
+    xvalues: list,
+    yvalues: dict,
+    ax: Axes = None,  # type: ignore
+    title: str = "",
+    xlabel: str = "",
+    ylabel: str = "",
+    percentage: bool = False,
+) -> Axes:
+    if ax is None:
+        ax = gca()
+    ax = set_chart_labels(ax=ax, title=title, xlabel=xlabel, ylabel=ylabel)
+    ax = set_chart_xticks(xvalues, ax=ax, percentage=percentage)
+    legend: list = []
+    for name, y in yvalues.items():
+        ax.plot(xvalues, y)
+        legend.append(name)
+        if any(v < 0 for v in y) and percentage:
+            ax.set_ylim(-1.0, 1.0)
+    ax.legend(legend, fontsize="xx-small")
+    return ax
 
 
-trnX, tstX, trnY, tstY, labels, vars = read_train_test_from_files(
-    train_filename, test_filename, target
-)
-print(f"Train#={len(trnX)} Test#={len(tstX)}")
-print(f"Labels={labels}")
+def trees_study(
+        trnX: ndarray, trnY: array, tstX: ndarray, tstY: array, d_max: int=10, lag:int=2, metric='accuracy'
+        ) -> tuple:
+    criteria: list[Literal['entropy', 'gini']] = ['entropy', 'gini']
+    depths: list[int] = [i for i in range(2, d_max+1, lag)]
 
-def naive_Bayes_study(
-    trnX: ndarray, trnY: array, tstX: ndarray, tstY: array, metric: str = "accuracy"
-) -> tuple:
-    estimators: dict = {
-        "GaussianNB": GaussianNB(),
-        #"MultinomialNB": MultinomialNB(),
-        "BernoulliNB": BernoulliNB(),
-    }
+    best_model: DecisionTreeClassifier | None = None
+    best_params: dict = {'name': 'DT', 'metric': metric, 'params': ()}
+    best_performance: float = 0.0
 
-    xvalues: list = []
-    yvalues: list = []
-    best_model = None
-    best_params: dict = {"name": "", "metric": metric, "params": ()}
-    best_performance = 0
-    for clf in estimators:
-        xvalues.append(clf)
-        estimators[clf].fit(trnX, trnY)
-        prdY: array = estimators[clf].predict(tstX)
-        eval: float = CLASS_EVAL_METRICS[metric](tstY, prdY)
-        if eval - best_performance > DELTA_IMPROVE:
-            best_performance: float = eval
-            best_params["name"] = clf
-            best_params[metric] = eval
-            best_model = estimators[clf]
-        yvalues.append(eval)
-        # print(f'NB {clf}')
-    plot_bar_chart(
-        xvalues,
-        yvalues,
-        title=f"Naive Bayes Models ({metric})",
-        ylabel=metric,
-        percentage=True,
-    )
+    values: dict = {}
+    for c in criteria:
+        y_tst_values: list[float] = []
+        for d in depths:
+            clf = DecisionTreeClassifier(max_depth=d, criterion=c, min_impurity_decrease=0)
+            clf.fit(trnX, trnY)
+            prdY: array = clf.predict(tstX)
+            eval: float = CLASS_EVAL_METRICS[metric](tstY, prdY)
+            y_tst_values.append(eval)
+            if eval - best_performance > DELTA_IMPROVE:
+                best_performance = eval
+                best_params['params'] = (c, d)
+                best_model = clf
+            # print(f'DT {c} and d={d}')
+        values[c] = y_tst_values
+    print(f'DT best with {best_params['params'][0]} and d={best_params['params'][1]}')
+    plot_multiline_chart(depths, values, title=f'DT Models ({metric})', xlabel='d', ylabel=metric, percentage=True)
 
     return best_model, best_params
 
+file_tag = "Financial"
+train_filename = "financial_train.csv"
+test_filename = "financial_test.csv"
+target = "CLASS"
+eval_metric = "precision"
+
+trnX, tstX, trnY, tstY, labels, vars = read_train_test_from_files(train_filename, test_filename, target)
+print(f'Train#={len(trnX)} Test#={len(tstX)}')
+print(f'Labels={labels}')
 
 figure()
-best_model, params = naive_Bayes_study(trnX, trnY, tstX, tstY, eval_metric)
-savefig(f"/Users/dominikfrank/Desktop/University/Master/Semester 1/PII/Data Science/Code for Project/DataScience/Projeto/Modeling/images{file_tag}_nb_{eval_metric}_study.png")
-show()
-
-figure()
-best_model, params = naive_Bayes_study(trnX, trnY, tstX, tstY, "recall")
-savefig(f"/Users/dominikfrank/Desktop/University/Master/Semester 1/PII/Data Science/Code for Project/DataScience/Projeto/Modeling/images{file_tag}_nb_recall_study.png")
+best_model, params = trees_study(trnX, trnY, tstX, tstY, d_max=25, metric=eval_metric)
+savefig(f'Projeto/Modeling/Decision Tree Financial/{file_tag}_dt_{eval_metric}_study.png')
 show()
 
 prd_trn: array = best_model.predict(trnX)
 prd_tst: array = best_model.predict(tstX)
 figure()
 plot_evaluation_results(params, trnY, prd_trn, tstY, prd_tst, labels)
-savefig(f'/Users/dominikfrank/Desktop/University/Master/Semester 1/PII/Data Science/Code for Project/DataScience/Projeto/Modeling/images{file_tag}_{params["name"]}_best_{params["metric"]}_eval.png')
+savefig(f'Projeto/Modeling/Decision Tree Financial/{file_tag}_dt_{params["name"]}_best_{params["metric"]}_eval.png')
 show()
+
+tree_filename: str = f"Projeto/Modeling/Decision Tree Financial/{file_tag}_dt_{eval_metric}_best_tree"
+max_depth2show = 3
+st_labels: list[str] = [str(value) for value in labels]
+
+dot_data: str = export_graphviz(
+    best_model,
+    out_file=tree_filename + ".dot",
+    max_depth=max_depth2show,
+    feature_names=vars,
+    class_names=st_labels,
+    filled=True,
+    rounded=True,
+    impurity=False,
+    special_characters=True,
+    precision=2,
+)
+# Convert to png
+if not os.path.isfile(tree_filename + ".dot"):
+    raise FileNotFoundError(f"{tree_filename + '.dot'} not found.")
+call(
+    ["C:\\Program Files\\Graphviz\\bin\\dot", "-Tpng", tree_filename + ".dot", "-o", tree_filename + ".png", "-Gdpi=600"]
+)
+
+
+figure(figsize=(14, 6))
+imshow(imread(tree_filename + ".png"))
+axis("off")
+show()
+
+figure(figsize=(14, 6))
+plot_tree(
+    best_model,
+    max_depth=max_depth2show,
+    feature_names=vars,
+    class_names=st_labels,
+    filled=True,
+    rounded=True,
+    impurity=False,
+    precision=2,
+)
+savefig(tree_filename + ".png")
+
+
+importances = best_model.feature_importances_
+indices: list[int] = argsort(importances)[::-1]
+elems: list[str] = []
+imp_values: list[float] = []
+for f in range(len(vars)):
+    elems += [vars[indices[f]]]
+    imp_values += [importances[indices[f]]]
+    print(f"{f+1}. {elems[f]} ({importances[indices[f]]})")
+
+figure()
+plot_horizontal_bar_chart(
+    elems,
+    imp_values,
+    title="Decision Tree variables importance",
+    xlabel="importance",
+    ylabel="variables",
+    percentage=True,
+)
+savefig(f"Projeto/Modeling/Decision Tree Financial/{file_tag}_dt_{eval_metric}_vars_ranking.png")
+
+crit: Literal["entropy", "gini"] = params["params"][0]
+d_max = 25
+depths: list[int] = [i for i in range(2, d_max + 1, 1)]
+y_tst_values: list[float] = []
+y_trn_values: list[float] = []
+acc_metric = "accuracy"
+for d in depths:
+    clf = DecisionTreeClassifier(max_depth=d, criterion=crit, min_impurity_decrease=0)
+    clf.fit(trnX, trnY)
+    prd_tst_Y: array = clf.predict(tstX)
+    prd_trn_Y: array = clf.predict(trnX)
+    y_tst_values.append(CLASS_EVAL_METRICS[acc_metric](tstY, prd_tst_Y))
+    y_trn_values.append(CLASS_EVAL_METRICS[acc_metric](trnY, prd_trn_Y))
+
+figure()
+plot_multiline_chart(
+    depths,
+    {"Train": y_trn_values, "Test": y_tst_values},
+    title=f"DT overfitting study for {crit}",
+    xlabel="max_depth",
+    ylabel=str(eval_metric),
+    percentage=True,
+)
+savefig(f"Projeto/Modeling/Decision Tree Financial/{file_tag}_dt_{eval_metric}_overfitting.png")
