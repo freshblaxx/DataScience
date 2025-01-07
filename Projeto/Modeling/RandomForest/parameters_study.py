@@ -311,14 +311,14 @@ best_model, params = random_forests_study(
     lag=250,
     metric=eval_metric,
 )
-savefig(f"Projeto/RandomForest/{file_tag}_rf_{eval_metric}_study.png")
+savefig(f"Projeto/Modeling/RandomForest/{file_tag}_rf_{eval_metric}_study.png")
 show()
 
 prd_trn: array = best_model.predict(trnX)
 prd_tst: array = best_model.predict(tstX)
 figure()
 plot_evaluation_results(params, trnY, prd_trn, tstY, prd_tst, labels)
-savefig(f'Projeto/RandomForest/{file_tag}_rf_{params["name"]}_best_{params["metric"]}_eval.png')
+savefig(f'Projeto/Modeling/RandomForest/{file_tag}_rf_{params["name"]}_best_{params["metric"]}_eval.png')
 show()
 
 stdevs: list[float] = list(
@@ -343,7 +343,7 @@ plot_horizontal_bar_chart(
     ylabel="variables",
     percentage=True,
 )
-savefig(f"Projeto/RandomForest/{file_tag}_rf_{eval_metric}_vars_ranking.png")
+savefig(f"Projeto/Modeling/RandomForest/{file_tag}_rf_{eval_metric}_vars_ranking.png")
 
 d_max: int = params["params"][0]
 feat: float = params["params"][1]
@@ -370,4 +370,4 @@ plot_multiline_chart(
     ylabel=str(eval_metric),
     percentage=True,
 )
-savefig(f"Projeto/RandomForest/{file_tag}_rf_{eval_metric}_overfitting.png")
+savefig(f"Projeto/Modeling/RandomForest/{file_tag}_rf_{eval_metric}_overfitting.png")
