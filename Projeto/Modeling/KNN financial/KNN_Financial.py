@@ -264,7 +264,7 @@ def plot_multiline_chart(
 def knn_study(
         trnX: ndarray, trnY: array, tstX: ndarray, tstY: array, k_max: int=19, lag: int=2, metric='accuracy'
         ) -> tuple[KNeighborsClassifier | None, dict]:
-    dist: list[Literal['manhattan', 'euclidean', 'chebyshev']] = ['manhattan', 'euclidean', 'chebyshev']
+    dist: list[Literal['euclidean']] = ['euclidean']
 
     kvalues: list[int] = [i for i in range(1, k_max+1, lag)]
     best_model: KNeighborsClassifier | None = None
@@ -295,7 +295,7 @@ file_tag = "Financial"
 train_filename = "financial_train.csv"
 test_filename = "financial_test.csv"
 target = "CLASS"
-eval_metric = "precision"
+eval_metric = "recall"
 
 
 trnX, tstX, trnY, tstY, labels, vars = read_train_test_from_files(train_filename, test_filename, target)

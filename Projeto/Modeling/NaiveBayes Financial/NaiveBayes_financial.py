@@ -213,7 +213,7 @@ def plot_evaluation_results(model, trn_y, prd_trn, tst_y, prd_tst, labels: ndarr
     fig: Figure
     axs: ndarray
     fig, axs = subplots(1, 2, figsize=(2 * HEIGHT, HEIGHT))
-    fig.suptitle(f'Best {model["metric"]} for {model["name"]} {params_st}')
+    fig.suptitle(f'{model["name"]} {params_st}')
     plot_multibar_chart(["Train", "Test"], evaluation, ax=axs[0], percentage=True)
 
     cnf_mtx_tst: ndarray = confusion_matrix(tst_y, prd_tst, labels=labels)

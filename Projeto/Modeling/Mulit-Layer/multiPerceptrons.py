@@ -1,17 +1,17 @@
 from typing import Literal
 from numpy import array, ndarray
-from sklearn.neighbors import KNeighborsClassifier
-from matplotlib.pyplot import figure, savefig, show
-from matplotlib.pyplot import figure, savefig
-from sklearn.tree import DecisionTreeClassifier
+from matplotlib.pyplot import subplots, figure, savefig, show
+from sklearn.neural_network import MLPClassifier
+from numpy import array, ndarray
+from matplotlib.pyplot import subplots, figure, savefig, show
+from sklearn.ensemble import RandomForestClassifier
 from numpy import array, ndarray
 from pandas import DataFrame
 from pandas import read_csv
-from numpy import argsort
 from numpy import array, ndarray
 from sklearn.naive_bayes import GaussianNB, MultinomialNB, BernoulliNB
 from matplotlib.pyplot import figure, savefig, show
-from sklearn.tree import plot_tree
+
 from typing import Callable
 from numpy import array, ndarray
 from matplotlib.container import BarContainer
@@ -47,36 +47,20 @@ from sklearn.metrics import confusion_matrix, RocCurveDisplay, roc_auc_score
 from sklearn.naive_bayes import _BaseNB, GaussianNB, MultinomialNB, BernoulliNB
 from sklearn.neighbors import KNeighborsClassifier
 from matplotlib.colors import LinearSegmentedColormap
-from sklearn.tree import export_graphviz
-from matplotlib.pyplot import imread, imshow, axis
-from subprocess import call
-import os
 
+def read_train_test_from_files(
+    train_fn: str, test_fn: str, target: str = "class"
+) -> tuple[ndarray, ndarray, array, array, list, list]:
+    train: DataFrame = read_csv(train_fn, index_col=None)
+    labels: list = list(train[target].unique())
+    labels.sort()
+    trnY: array = train.pop(target).to_list()
+    trnX: ndarray = train.values
 
-
-def plot_horizontal_bar_chart(
-    elements: list,
-    values: list,
-    error: list = [],
-    ax: Axes = None,  # type: ignore
-    title: str = "",
-    xlabel: str = "",
-    ylabel: str = "",
-    percentage: bool = False,
-) -> Axes:
-    if ax is None:
-        ax = gca()
-    if percentage:
-        ax.set_xlim((0, 1))
-    if error == []:
-        error = [0] * len(elements)
-    ax = set_chart_labels(ax=ax, title=title, xlabel=xlabel, ylabel=ylabel)
-    y_pos: list = list(arange(len(elements)))
-
-    ax.barh(y_pos, values, xerr=error, align="center", error_kw={"lw": 0.5, "ecolor": "r"})
-    ax.set_yticks(y_pos, labels=elements)
-    ax.invert_yaxis()  # labels read top-to-bottom
-    return ax
+    test: DataFrame = read_csv(test_fn, index_col=None)
+    tstY: array = test.pop(target).to_list()
+    tstX: ndarray = test.values
+    return trnX, tstX, trnY, tstY, labels, train.columns.to_list()
 
 my_palette = {
     "yellow": "#ECD474",
@@ -151,6 +135,28 @@ def set_chart_xticks(xvalues: list[str | int | float | datetime], ax: Axes, perc
 
         ax.tick_params(axis="x", labelrotation=rotation, labelsize="xx-small")
 
+    return ax
+
+def plot_multiline_chart(
+    xvalues: list,
+    yvalues: dict,
+    ax: Axes = None,  # type: ignore
+    title: str = "",
+    xlabel: str = "",
+    ylabel: str = "",
+    percentage: bool = False,
+) -> Axes:
+    if ax is None:
+        ax = gca()
+    ax = set_chart_labels(ax=ax, title=title, xlabel=xlabel, ylabel=ylabel)
+    ax = set_chart_xticks(xvalues, ax=ax, percentage=percentage)
+    legend: list = []
+    for name, y in yvalues.items():
+        ax.plot(xvalues, y)
+        legend.append(name)
+        if any(v < 0 for v in y) and percentage:
+            ax.set_ylim(-1.0, 1.0)
+    ax.legend(legend, fontsize="xx-small")
     return ax
 
 def plot_bar_chart(
@@ -248,186 +254,109 @@ def plot_evaluation_results(model, trn_y, prd_trn, tst_y, prd_tst, labels: ndarr
     fig: Figure
     axs: ndarray
     fig, axs = subplots(1, 2, figsize=(2 * HEIGHT, HEIGHT))
-    fig.suptitle(f'Best {model["metric"]} for {model["name"]} {params_st}')
+    fig.suptitle(f'{model["name"]} {params_st}')
     plot_multibar_chart(["Train", "Test"], evaluation, ax=axs[0], percentage=True)
 
     cnf_mtx_tst: ndarray = confusion_matrix(tst_y, prd_tst, labels=labels)
     plot_confusion_matrix(cnf_mtx_tst, labels, ax=axs[1])
     return axs
 
-def read_train_test_from_files(
-    train_fn: str, test_fn: str, target: str = "class"
-) -> tuple[ndarray, ndarray, array, array, list, list]:
-    train: DataFrame = read_csv(train_fn, index_col=None)
-    labels: list = list(train[target].unique())
-    labels.sort()
-    trnY: array = train.pop(target).to_list()
-    trnX: ndarray = train.values
-
-    test: DataFrame = read_csv(test_fn, index_col=None)
-    tstY: array = test.pop(target).to_list()
-    tstX: ndarray = test.values
-    return trnX, tstX, trnY, tstY, labels, train.columns.to_list()
-
-def plot_multiline_chart(
-    xvalues: list,
-    yvalues: dict,
-    ax: Axes = None,  # type: ignore
-    title: str = "",
-    xlabel: str = "",
-    ylabel: str = "",
-    percentage: bool = False,
-) -> Axes:
-    if ax is None:
-        ax = gca()
-    ax = set_chart_labels(ax=ax, title=title, xlabel=xlabel, ylabel=ylabel)
-    ax = set_chart_xticks(xvalues, ax=ax, percentage=percentage)
-    legend: list = []
-    for name, y in yvalues.items():
-        ax.plot(xvalues, y)
-        legend.append(name)
-        if any(v < 0 for v in y) and percentage:
-            ax.set_ylim(-1.0, 1.0)
-    ax.legend(legend, fontsize="xx-small")
-    return ax
+LAG: int = 500
+NR_MAX_ITER: int = 5000
 
 
-def trees_study(
-        trnX: ndarray, trnY: array, tstX: ndarray, tstY: array, d_max: int=10, lag:int=2, metric='accuracy'
-        ) -> tuple:
-    criteria: list[Literal['entropy', 'gini']] = ['entropy', 'gini']
-    depths: list[int] = [i for i in range(2, d_max+1, lag)]
+def mlp_study(
+    trnX: ndarray,
+    trnY: array,
+    tstX: ndarray,
+    tstY: array,
+    nr_max_iterations: int = 2500,
+    lag: int = 500,
+    metric: str = "accuracy",
+) -> tuple[MLPClassifier | None, dict]:
+    nr_iterations: list[int] = [lag] + [
+        i for i in range(2 * lag, nr_max_iterations + 1, lag)
+    ]
 
-    best_model: DecisionTreeClassifier | None = None
-    best_params: dict = {'name': 'DT', 'metric': metric, 'params': ()}
+    lr_types: list[Literal["constant", "invscaling", "adaptive"]] = [
+        "constant",
+        "invscaling",
+        "adaptive",
+    ]  # only used if optimizer='sgd'
+    learning_rates: list[float] = [0.5, 0.05, 0.005, 0.0005]
+
+    best_model: MLPClassifier | None = None
+    best_params: dict = {"name": "MLP", "metric": metric, "params": ()}
     best_performance: float = 0.0
 
     values: dict = {}
-    for c in criteria:
-        y_tst_values: list[float] = []
-        for d in depths:
-            clf = DecisionTreeClassifier(max_depth=d, criterion=c, min_impurity_decrease=0)
-            clf.fit(trnX, trnY)
-            prdY: array = clf.predict(tstX)
-            eval: float = CLASS_EVAL_METRICS[metric](tstY, prdY)
-            y_tst_values.append(eval)
-            if eval - best_performance > DELTA_IMPROVE:
-                best_performance = eval
-                best_params['params'] = (c, d)
-                best_model = clf
-            # print(f'DT {c} and d={d}')
-        values[c] = y_tst_values
-    print(f'DT best with {best_params['params'][0]} and d={best_params['params'][1]}')
-    plot_multiline_chart(depths, values, title=f'DT Models ({metric})', xlabel='d', ylabel=metric, percentage=True)
+    _, axs = subplots(
+        1, len(lr_types), figsize=(len(lr_types) * HEIGHT, HEIGHT), squeeze=False
+    )
+    for i in range(len(lr_types)):
+        type: str = lr_types[i]
+        values = {}
+        for lr in learning_rates:
+            warm_start: bool = False
+            y_tst_values: list[float] = []
+            for j in range(len(nr_iterations)):
+                clf = MLPClassifier(
+                    learning_rate=type,
+                    learning_rate_init=lr,
+                    max_iter=lag,
+                    warm_start=warm_start,
+                    activation="logistic",
+                    solver="sgd",
+                    verbose=False,
+                )
+                clf.fit(trnX, trnY)
+                prdY: array = clf.predict(tstX)
+                eval: float = CLASS_EVAL_METRICS[metric](tstY, prdY)
+                y_tst_values.append(eval)
+                warm_start = True
+                if eval - best_performance > DELTA_IMPROVE:
+                    best_performance = eval
+                    best_params["params"] = (type, lr, nr_iterations[j])
+                    best_model = clf
+                # print(f'MLP lr_type={type} lr={lr} n={nr_iterations[j]}')
+            values[lr] = y_tst_values
+        plot_multiline_chart(
+            nr_iterations,
+            values,
+            ax=axs[0, i],
+            title=f"MLP with {type}",
+            xlabel="nr iterations",
+            ylabel=metric,
+            percentage=True,
+        )
+    print(
+        f'MLP best for {best_params["params"][2]} iterations (lr_type={best_params["params"][0]} and lr={best_params["params"][1]}'
+    )
 
     return best_model, best_params
 
-file_tag = "Financial"
+
+file_tag = "financial"
 train_filename = "financial_train.csv"
 test_filename = "financial_test.csv"
 target = "CLASS"
-eval_metric = "recall"
+eval_metric = "accuracy"
 
-trnX, tstX, trnY, tstY, labels, vars = read_train_test_from_files(train_filename, test_filename, target)
-print(f'Train#={len(trnX)} Test#={len(tstX)}')
-print(f'Labels={labels}')
+trnX, tstX, trnY, tstY, labels, vars = read_train_test_from_files(
+    train_filename, test_filename, target
+)
+print(f"Train#={len(trnX)} Test#={len(tstX)}")
+print(f"Labels={labels}")
 
 figure()
-best_model, params = trees_study(trnX, trnY, tstX, tstY, d_max=25, metric=eval_metric)
-savefig(f'Projeto/Modeling/Decision Tree Financial/{file_tag}_dt_{eval_metric}_study.png')
+best_model, params = mlp_study(
+    trnX,
+    trnY,
+    tstX,
+    tstY,
+    nr_max_iterations=NR_MAX_ITER,
+    lag=LAG,
+    metric=eval_metric,
+)
+savefig(f"Projeto/Modeling/Mulit-Layer/{file_tag}_mlp_{eval_metric}_study.png")
 show()
-
-prd_trn: array = best_model.predict(trnX)
-prd_tst: array = best_model.predict(tstX)
-figure()
-plot_evaluation_results(params, trnY, prd_trn, tstY, prd_tst, labels)
-savefig(f'Projeto/Modeling/Decision Tree Financial/{file_tag}_dt_{params["name"]}_best_{params["metric"]}_eval.png')
-show()
-
-tree_filename: str = f"Projeto/Modeling/Decision Tree Financial/{file_tag}_dt_{eval_metric}_best_tree"
-max_depth2show = 3
-st_labels: list[str] = [str(value) for value in labels]
-
-dot_data: str = export_graphviz(
-    best_model,
-    out_file=tree_filename + ".dot",
-    max_depth=max_depth2show,
-    feature_names=vars,
-    class_names=st_labels,
-    filled=True,
-    rounded=True,
-    impurity=False,
-    special_characters=True,
-    precision=2,
-)
-# Convert to png
-if not os.path.isfile(tree_filename + ".dot"):
-    raise FileNotFoundError(f"{tree_filename + '.dot'} not found.")
-call(
-    ["C:\\Program Files\\Graphviz\\bin\\dot", "-Tpng", tree_filename + ".dot", "-o", tree_filename + ".png", "-Gdpi=600"]
-)
-
-
-figure(figsize=(14, 6))
-imshow(imread(tree_filename + ".png"))
-axis("off")
-show()
-
-figure(figsize=(14, 6))
-plot_tree(
-    best_model,
-    max_depth=max_depth2show,
-    feature_names=vars,
-    class_names=st_labels,
-    filled=True,
-    rounded=True,
-    impurity=False,
-    precision=2,
-)
-savefig(tree_filename + ".png")
-
-
-importances = best_model.feature_importances_
-indices: list[int] = argsort(importances)[::-1]
-elems: list[str] = []
-imp_values: list[float] = []
-for f in range(len(vars)):
-    elems += [vars[indices[f]]]
-    imp_values += [importances[indices[f]]]
-    print(f"{f+1}. {elems[f]} ({importances[indices[f]]})")
-
-figure()
-plot_horizontal_bar_chart(
-    elems,
-    imp_values,
-    title="Decision Tree variables importance",
-    xlabel="importance",
-    ylabel="variables",
-    percentage=True,
-)
-savefig(f"Projeto/Modeling/Decision Tree Financial/{file_tag}_dt_{eval_metric}_vars_ranking.png")
-
-crit: Literal["entropy", "gini"] = params["params"][0]
-d_max = 25
-depths: list[int] = [i for i in range(2, d_max + 1, 1)]
-y_tst_values: list[float] = []
-y_trn_values: list[float] = []
-acc_metric = "accuracy"
-for d in depths:
-    clf = DecisionTreeClassifier(max_depth=d, criterion=crit, min_impurity_decrease=0)
-    clf.fit(trnX, trnY)
-    prd_tst_Y: array = clf.predict(tstX)
-    prd_trn_Y: array = clf.predict(trnX)
-    y_tst_values.append(CLASS_EVAL_METRICS[acc_metric](tstY, prd_tst_Y))
-    y_trn_values.append(CLASS_EVAL_METRICS[acc_metric](trnY, prd_trn_Y))
-
-figure()
-plot_multiline_chart(
-    depths,
-    {"Train": y_trn_values, "Test": y_tst_values},
-    title=f"DT overfitting study for {crit}",
-    xlabel="max_depth",
-    ylabel=str(eval_metric),
-    percentage=True,
-)
-savefig(f"Projeto/Modeling/Decision Tree Financial/{file_tag}_dt_{eval_metric}_overfitting.png")

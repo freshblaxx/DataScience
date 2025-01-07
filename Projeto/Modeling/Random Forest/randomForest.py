@@ -1,6 +1,22 @@
 from numpy import array, ndarray
 from matplotlib.pyplot import subplots, figure, savefig, show
 from sklearn.ensemble import RandomForestClassifier
+from numpy import array, ndarray
+from pandas import DataFrame
+from pandas import read_csv
+from numpy import array, ndarray
+from sklearn.naive_bayes import GaussianNB, MultinomialNB, BernoulliNB
+from matplotlib.pyplot import figure, savefig, show
+
+from typing import Callable
+from numpy import array, ndarray
+from matplotlib.container import BarContainer
+from matplotlib.axes import Axes
+from matplotlib.pyplot import gca, savefig
+from sklearn.metrics import accuracy_score, recall_score, precision_score
+from sklearn.metrics import f1_score
+from sklearn.metrics import roc_auc_score
+from sklearn.naive_bayes import GaussianNB, MultinomialNB, BernoulliNB
 from math import pi, sin, cos, ceil, sqrt
 from itertools import product
 from datetime import datetime
@@ -14,7 +30,7 @@ from matplotlib.font_manager import FontProperties
 from matplotlib.axes import Axes
 from matplotlib.pyplot import gca, gcf, savefig, subplots, text
 from matplotlib.dates import AutoDateLocator, AutoDateFormatter
-from numpy import std, argsort
+
 # from matplotlib.dates import _reset_epoch_test_example, set_epoch
 from pandas import DataFrame, Series, Index, Period
 from pandas import read_csv, concat, to_numeric, to_datetime
@@ -27,6 +43,20 @@ from sklearn.metrics import confusion_matrix, RocCurveDisplay, roc_auc_score
 from sklearn.naive_bayes import _BaseNB, GaussianNB, MultinomialNB, BernoulliNB
 from sklearn.neighbors import KNeighborsClassifier
 from matplotlib.colors import LinearSegmentedColormap
+
+def read_train_test_from_files(
+    train_fn: str, test_fn: str, target: str = "class"
+) -> tuple[ndarray, ndarray, array, array, list, list]:
+    train: DataFrame = read_csv(train_fn, index_col=None)
+    labels: list = list(train[target].unique())
+    labels.sort()
+    trnY: array = train.pop(target).to_list()
+    trnX: ndarray = train.values
+
+    test: DataFrame = read_csv(test_fn, index_col=None)
+    tstY: array = test.pop(target).to_list()
+    tstX: ndarray = test.values
+    return trnX, tstX, trnY, tstY, labels, train.columns.to_list()
 
 my_palette = {
     "yellow": "#ECD474",
@@ -60,9 +90,15 @@ blues = [
     my_palette["blue3"],
     my_palette["dark blue"],
 ]
+
 cmap_blues = LinearSegmentedColormap.from_list("myCMPBlues", blues)
 
+
+FONT_SIZE = 6
+FONT_TEXT = FontProperties(size=FONT_SIZE)
 DELTA_IMPROVE: float = 0.001
+LINE_COLOR = my_palette["dark blue"]
+FILL_COLOR = my_palette["blue2"]  # my_palette["pale blue"]
 CLASS_EVAL_METRICS: dict[str, Callable] = {
     "accuracy": accuracy_score,
     "recall": recall_score,
@@ -70,45 +106,6 @@ CLASS_EVAL_METRICS: dict[str, Callable] = {
     "auc": roc_auc_score,
     "f1": f1_score,
 }
-HEIGHT: int = 4
-FONT_SIZE = 6
-FONT_TEXT = FontProperties(size=FONT_SIZE)
-
-def read_train_test_from_files(
-    train_fn: str, test_fn: str, target: str = "class"
-) -> tuple[ndarray, ndarray, array, array, list, list]:
-    train: DataFrame = read_csv(train_fn, index_col=None)
-    labels: list = list(train[target].unique())
-    labels.sort()
-    trnY: array = train.pop(target).to_list()
-    trnX: ndarray = train.values
-
-    test: DataFrame = read_csv(test_fn, index_col=None)
-    tstY: array = test.pop(target).to_list()
-    tstX: ndarray = test.values
-    return trnX, tstX, trnY, tstY, labels, train.columns.to_list()
-
-def plot_multiline_chart(
-    xvalues: list,
-    yvalues: dict,
-    ax: Axes = None,  # type: ignore
-    title: str = "",
-    xlabel: str = "",
-    ylabel: str = "",
-    percentage: bool = False,
-) -> Axes:
-    if ax is None:
-        ax = gca()
-    ax = set_chart_labels(ax=ax, title=title, xlabel=xlabel, ylabel=ylabel)
-    ax = set_chart_xticks(xvalues, ax=ax, percentage=percentage)
-    legend: list = []
-    for name, y in yvalues.items():
-        ax.plot(xvalues, y)
-        legend.append(name)
-        if any(v < 0 for v in y) and percentage:
-            ax.set_ylim(-1.0, 1.0)
-    ax.legend(legend, fontsize="xx-small")
-    return ax
 
 def set_chart_labels(ax: Axes, title: str = "", xlabel: str = "", ylabel: str = "") -> Axes:
     ax.set_title(title)
@@ -136,29 +133,9 @@ def set_chart_xticks(xvalues: list[str | int | float | datetime], ax: Axes, perc
 
     return ax
 
-def plot_evaluation_results(model, trn_y, prd_trn, tst_y, prd_tst, labels: ndarray) -> ndarray:
-    evaluation: dict = {}
-    for key in CLASS_EVAL_METRICS:
-        evaluation[key] = [
-            CLASS_EVAL_METRICS[key](trn_y, prd_trn),
-            CLASS_EVAL_METRICS[key](tst_y, prd_tst),
-        ]
-
-    params_st: str = "" if () == model["params"] else str(model["params"])
-    fig: Figure
-    axs: ndarray
-    fig, axs = subplots(1, 2, figsize=(2 * HEIGHT, HEIGHT))
-    fig.suptitle(f'Best {model["metric"]} for {model["name"]} {params_st}')
-    plot_multibar_chart(["Train", "Test"], evaluation, ax=axs[0], percentage=True)
-
-    cnf_mtx_tst: ndarray = confusion_matrix(tst_y, prd_tst, labels=labels)
-    plot_confusion_matrix(cnf_mtx_tst, labels, ax=axs[1])
-    return axs
-
-def plot_horizontal_bar_chart(
-    elements: list,
-    values: list,
-    error: list = [],
+def plot_multiline_chart(
+    xvalues: list,
+    yvalues: dict,
     ax: Axes = None,  # type: ignore
     title: str = "",
     xlabel: str = "",
@@ -167,35 +144,41 @@ def plot_horizontal_bar_chart(
 ) -> Axes:
     if ax is None:
         ax = gca()
-    if percentage:
-        ax.set_xlim((0, 1))
-    if error == []:
-        error = [0] * len(elements)
     ax = set_chart_labels(ax=ax, title=title, xlabel=xlabel, ylabel=ylabel)
-    y_pos: list = list(arange(len(elements)))
-
-    ax.barh(y_pos, values, xerr=error, align="center", error_kw={"lw": 0.5, "ecolor": "r"})
-    ax.set_yticks(y_pos, labels=elements)
-    ax.invert_yaxis()  # labels read top-to-bottom
+    ax = set_chart_xticks(xvalues, ax=ax, percentage=percentage)
+    legend: list = []
+    for name, y in yvalues.items():
+        ax.plot(xvalues, y)
+        legend.append(name)
+        if any(v < 0 for v in y) and percentage:
+            ax.set_ylim(-1.0, 1.0)
+    ax.legend(legend, fontsize="xx-small")
     return ax
 
-def plot_confusion_matrix(cnf_matrix: ndarray, classes_names: ndarray, ax: Axes = None) -> Axes:  # type: ignore
+def plot_bar_chart(
+    xvalues: list,
+    yvalues: list,
+    ax: Axes = None,  # type: ignore
+    title: str = "",
+    xlabel: str = "",
+    ylabel: str = "",
+    percentage: bool = False,
+) -> Axes:
     if ax is None:
         ax = gca()
-    title = "Confusion matrix"
-    set_printoptions(precision=2)
-    tick_marks: ndarray = arange(0, len(classes_names), 1)
-    ax.set_title(title)
-    ax.set_ylabel("True label")
-    ax.set_xlabel("Predicted label")
-    ax.set_xticks(tick_marks)
-    ax.set_yticks(tick_marks)
-    ax.set_xticklabels(classes_names)
-    ax.set_yticklabels(classes_names)
-    ax.imshow(cnf_matrix, interpolation="nearest", cmap=cmap_blues)
+    ax = set_chart_labels(ax=ax, title=title, xlabel=xlabel, ylabel=ylabel)
+    ax = set_chart_xticks(xvalues, ax=ax, percentage=percentage)
+    values: BarContainer = ax.bar(
+        xvalues,
+        yvalues,
+        label=yvalues,
+        edgecolor=LINE_COLOR,
+        color=FILL_COLOR,
+        tick_label=xvalues,
+    )
+    format = "%.2f" if percentage else "%.0f"
+    ax.bar_label(values, fmt=format, fontproperties=FONT_TEXT)
 
-    for i, j in product(range(cnf_matrix.shape[0]), range(cnf_matrix.shape[1])):
-        ax.text(j, i, format(cnf_matrix[i, j], "d"), color="y", horizontalalignment="center")
     return ax
 
 def plot_multibar_chart(
@@ -233,6 +216,47 @@ def plot_multibar_chart(
             ax.set_ylim(-1.0, 1.0)
     ax.legend(fontsize="xx-small")
     return ax
+
+HEIGHT: int = 4
+
+def plot_confusion_matrix(cnf_matrix: ndarray, classes_names: ndarray, ax: Axes = None) -> Axes:  # type: ignore
+    if ax is None:
+        ax = gca()
+    title = "Confusion matrix"
+    set_printoptions(precision=2)
+    tick_marks: ndarray = arange(0, len(classes_names), 1)
+    ax.set_title(title)
+    ax.set_ylabel("True label")
+    ax.set_xlabel("Predicted label")
+    ax.set_xticks(tick_marks)
+    ax.set_yticks(tick_marks)
+    ax.set_xticklabels(classes_names)
+    ax.set_yticklabels(classes_names)
+    ax.imshow(cnf_matrix, interpolation="nearest", cmap=cmap_blues)
+
+    for i, j in product(range(cnf_matrix.shape[0]), range(cnf_matrix.shape[1])):
+        ax.text(j, i, format(cnf_matrix[i, j], "d"), color="y", horizontalalignment="center")
+    return ax
+
+def plot_evaluation_results(model, trn_y, prd_trn, tst_y, prd_tst, labels: ndarray) -> ndarray:
+    evaluation: dict = {}
+    for key in CLASS_EVAL_METRICS:
+        evaluation[key] = [
+            CLASS_EVAL_METRICS[key](trn_y, prd_trn),
+            CLASS_EVAL_METRICS[key](tst_y, prd_tst),
+        ]
+
+    params_st: str = "" if () == model["params"] else str(model["params"])
+    fig: Figure
+    axs: ndarray
+    fig, axs = subplots(1, 2, figsize=(2 * HEIGHT, HEIGHT))
+    fig.suptitle(f'{model["name"]} {params_st}')
+    plot_multibar_chart(["Train", "Test"], evaluation, ax=axs[0], percentage=True)
+
+    cnf_mtx_tst: ndarray = confusion_matrix(tst_y, prd_tst, labels=labels)
+    plot_confusion_matrix(cnf_mtx_tst, labels, ax=axs[1])
+    return axs
+
 
 def random_forests_study(
     trnX: ndarray,
@@ -289,11 +313,11 @@ def random_forests_study(
     return best_model, best_params
 
 
-file_tag = "arrest"
-train_filename = "class_arrests_SMOTE.csv"
-test_filename = "Arrests_testing_data.csv"
+file_tag = "financial"
+train_filename = "financial_train.csv"
+test_filename = "financial_test.csv"
 target = "CLASS"
-eval_metric = "accuracy"
+eval_metric = "precision"
 
 trnX, tstX, trnY, tstY, labels, vars = read_train_test_from_files(
     train_filename, test_filename, target
@@ -311,39 +335,15 @@ best_model, params = random_forests_study(
     lag=250,
     metric=eval_metric,
 )
-savefig(f"Projeto/Modeling/RandomForest/{file_tag}_rf_{eval_metric}_study.png")
+savefig(f"Projeto/Modeling/Random Forest/{file_tag}_rf_{eval_metric}_study.png")
 show()
 
 prd_trn: array = best_model.predict(trnX)
 prd_tst: array = best_model.predict(tstX)
 figure()
 plot_evaluation_results(params, trnY, prd_trn, tstY, prd_tst, labels)
-savefig(f'Projeto/Modeling/RandomForest/{file_tag}_rf_{params["name"]}_best_{params["metric"]}_eval.png')
+savefig(f'Projeto/Modeling/Random Forest/{file_tag}_rf_{params["name"]}_best_{params["metric"]}_eval.png')
 show()
-
-stdevs: list[float] = list(
-    std([tree.feature_importances_ for tree in best_model.estimators_], axis=0)
-)
-importances = best_model.feature_importances_
-indices: list[int] = argsort(importances)[::-1]
-elems: list[str] = []
-imp_values: list[float] = []
-for f in range(len(vars)):
-    elems += [vars[indices[f]]]
-    imp_values.append(importances[indices[f]])
-    print(f"{f+1}. {elems[f]} ({importances[indices[f]]})")
-
-figure()
-plot_horizontal_bar_chart(
-    elems,
-    imp_values,
-    error=stdevs,
-    title="RF variables importance",
-    xlabel="importance",
-    ylabel="variables",
-    percentage=True,
-)
-savefig(f"Projeto/Modeling/RandomForest/{file_tag}_rf_{eval_metric}_vars_ranking.png")
 
 d_max: int = params["params"][0]
 feat: float = params["params"][1]
@@ -370,4 +370,4 @@ plot_multiline_chart(
     ylabel=str(eval_metric),
     percentage=True,
 )
-savefig(f"Projeto/Modeling/RandomForest/{file_tag}_rf_{eval_metric}_overfitting.png")
+savefig(f"Projeto/Modeling/Random Forest/{file_tag}_rf_{eval_metric}_overfitting.png")
