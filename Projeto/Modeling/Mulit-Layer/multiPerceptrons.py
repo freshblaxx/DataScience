@@ -2,25 +2,6 @@ from typing import Literal
 from numpy import array, ndarray
 from matplotlib.pyplot import subplots, figure, savefig, show
 from sklearn.neural_network import MLPClassifier
-from numpy import array, ndarray
-from matplotlib.pyplot import subplots, figure, savefig, show
-from sklearn.ensemble import RandomForestClassifier
-from numpy import array, ndarray
-from pandas import DataFrame
-from pandas import read_csv
-from numpy import array, ndarray
-from sklearn.naive_bayes import GaussianNB, MultinomialNB, BernoulliNB
-from matplotlib.pyplot import figure, savefig, show
-
-from typing import Callable
-from numpy import array, ndarray
-from matplotlib.container import BarContainer
-from matplotlib.axes import Axes
-from matplotlib.pyplot import gca, savefig
-from sklearn.metrics import accuracy_score, recall_score, precision_score
-from sklearn.metrics import f1_score
-from sklearn.metrics import roc_auc_score
-from sklearn.naive_bayes import GaussianNB, MultinomialNB, BernoulliNB
 from math import pi, sin, cos, ceil, sqrt
 from itertools import product
 from datetime import datetime
@@ -34,7 +15,10 @@ from matplotlib.font_manager import FontProperties
 from matplotlib.axes import Axes
 from matplotlib.pyplot import gca, gcf, savefig, subplots, text
 from matplotlib.dates import AutoDateLocator, AutoDateFormatter
-
+from matplotlib.pyplot import rcParams, style
+from matplotlib.colors import LinearSegmentedColormap
+from warnings import simplefilter
+from cycler import cycler
 # from matplotlib.dates import _reset_epoch_test_example, set_epoch
 from pandas import DataFrame, Series, Index, Period
 from pandas import read_csv, concat, to_numeric, to_datetime
@@ -46,21 +30,14 @@ from sklearn.metrics import f1_score
 from sklearn.metrics import confusion_matrix, RocCurveDisplay, roc_auc_score
 from sklearn.naive_bayes import _BaseNB, GaussianNB, MultinomialNB, BernoulliNB
 from sklearn.neighbors import KNeighborsClassifier
-from matplotlib.colors import LinearSegmentedColormap
 
-def read_train_test_from_files(
-    train_fn: str, test_fn: str, target: str = "class"
-) -> tuple[ndarray, ndarray, array, array, list, list]:
-    train: DataFrame = read_csv(train_fn, index_col=None)
-    labels: list = list(train[target].unique())
-    labels.sort()
-    trnY: array = train.pop(target).to_list()
-    trnX: ndarray = train.values
-
-    test: DataFrame = read_csv(test_fn, index_col=None)
-    tstY: array = test.pop(target).to_list()
-    tstX: ndarray = test.values
-    return trnX, tstX, trnY, tstY, labels, train.columns.to_list()
+CLASS_EVAL_METRICS: dict[str, Callable] = {
+    "accuracy": accuracy_score,
+    "recall": recall_score,
+    "precision": precision_score,
+    "auc": roc_auc_score,
+    "f1": f1_score,
+}
 
 my_palette = {
     "yellow": "#ECD474",
@@ -88,6 +65,7 @@ my_palette = {
     "black": "#000000",
     "red": "#FF0000"
 }
+
 blues = [
     my_palette["pale blue"],
     my_palette["blue2"],
@@ -96,26 +74,32 @@ blues = [
 ]
 
 cmap_blues = LinearSegmentedColormap.from_list("myCMPBlues", blues)
-
-
+DELTA_IMPROVE: float = 0.001
 FONT_SIZE = 6
 FONT_TEXT = FontProperties(size=FONT_SIZE)
-DELTA_IMPROVE: float = 0.001
 LINE_COLOR = my_palette["dark blue"]
-FILL_COLOR = my_palette["blue2"]  # my_palette["pale blue"]
-CLASS_EVAL_METRICS: dict[str, Callable] = {
-    "accuracy": accuracy_score,
-    "recall": recall_score,
-    "precision": precision_score,
-    "auc": roc_auc_score,
-    "f1": f1_score,
-}
+FILL_COLOR = my_palette["blue2"]
+
+def read_train_test_from_files(
+    train_fn: str, test_fn: str, target: str = "class"
+) -> tuple[ndarray, ndarray, array, array, list, list]:
+    train: DataFrame = read_csv(train_fn, index_col=None)
+    labels: list = list(train[target].unique())
+    labels.sort()
+    trnY: array = train.pop(target).to_list()
+    trnX: ndarray = train.values
+
+    test: DataFrame = read_csv(test_fn, index_col=None)
+    tstY: array = test.pop(target).to_list()
+    tstX: ndarray = test.values
+    return trnX, tstX, trnY, tstY, labels, train.columns.to_list()
 
 def set_chart_labels(ax: Axes, title: str = "", xlabel: str = "", ylabel: str = "") -> Axes:
     ax.set_title(title)
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
     return ax
+
 
 def set_chart_xticks(xvalues: list[str | int | float | datetime], ax: Axes, percentage: bool = False) -> Axes:
     if len(xvalues) > 0:
@@ -137,53 +121,7 @@ def set_chart_xticks(xvalues: list[str | int | float | datetime], ax: Axes, perc
 
     return ax
 
-def plot_multiline_chart(
-    xvalues: list,
-    yvalues: dict,
-    ax: Axes = None,  # type: ignore
-    title: str = "",
-    xlabel: str = "",
-    ylabel: str = "",
-    percentage: bool = False,
-) -> Axes:
-    if ax is None:
-        ax = gca()
-    ax = set_chart_labels(ax=ax, title=title, xlabel=xlabel, ylabel=ylabel)
-    ax = set_chart_xticks(xvalues, ax=ax, percentage=percentage)
-    legend: list = []
-    for name, y in yvalues.items():
-        ax.plot(xvalues, y)
-        legend.append(name)
-        if any(v < 0 for v in y) and percentage:
-            ax.set_ylim(-1.0, 1.0)
-    ax.legend(legend, fontsize="xx-small")
-    return ax
-
-def plot_bar_chart(
-    xvalues: list,
-    yvalues: list,
-    ax: Axes = None,  # type: ignore
-    title: str = "",
-    xlabel: str = "",
-    ylabel: str = "",
-    percentage: bool = False,
-) -> Axes:
-    if ax is None:
-        ax = gca()
-    ax = set_chart_labels(ax=ax, title=title, xlabel=xlabel, ylabel=ylabel)
-    ax = set_chart_xticks(xvalues, ax=ax, percentage=percentage)
-    values: BarContainer = ax.bar(
-        xvalues,
-        yvalues,
-        label=yvalues,
-        edgecolor=LINE_COLOR,
-        color=FILL_COLOR,
-        tick_label=xvalues,
-    )
-    format = "%.2f" if percentage else "%.0f"
-    ax.bar_label(values, fmt=format, fontproperties=FONT_TEXT)
-
-    return ax
+HEIGHT: int = 4
 
 def plot_multibar_chart(
     group_labels: list,
@@ -221,8 +159,6 @@ def plot_multibar_chart(
     ax.legend(fontsize="xx-small")
     return ax
 
-HEIGHT: int = 4
-
 def plot_confusion_matrix(cnf_matrix: ndarray, classes_names: ndarray, ax: Axes = None) -> Axes:  # type: ignore
     if ax is None:
         ax = gca()
@@ -254,12 +190,59 @@ def plot_evaluation_results(model, trn_y, prd_trn, tst_y, prd_tst, labels: ndarr
     fig: Figure
     axs: ndarray
     fig, axs = subplots(1, 2, figsize=(2 * HEIGHT, HEIGHT))
-    fig.suptitle(f'{model["name"]} {params_st}')
+    fig.suptitle(f'Best {model["metric"]} for {model["name"]} {params_st}')
     plot_multibar_chart(["Train", "Test"], evaluation, ax=axs[0], percentage=True)
 
     cnf_mtx_tst: ndarray = confusion_matrix(tst_y, prd_tst, labels=labels)
     plot_confusion_matrix(cnf_mtx_tst, labels, ax=axs[1])
     return axs
+
+def plot_multiline_chart(
+    xvalues: list,
+    yvalues: dict,
+    ax: Axes = None,  # type: ignore
+    title: str = "",
+    xlabel: str = "",
+    ylabel: str = "",
+    percentage: bool = False,
+) -> Axes:
+    if ax is None:
+        ax = gca()
+    ax = set_chart_labels(ax=ax, title=title, xlabel=xlabel, ylabel=ylabel)
+    ax = set_chart_xticks(xvalues, ax=ax, percentage=percentage)
+    legend: list = []
+    for name, y in yvalues.items():
+        ax.plot(xvalues, y)
+        legend.append(name)
+        if any(v < 0 for v in y) and percentage:
+            ax.set_ylim(-1.0, 1.0)
+    ax.legend(legend, fontsize="xx-small")
+    return ax
+
+def plot_line_chart(
+    xvalues: list,
+    yvalues: list,
+    ax: Axes = None,  # type: ignore
+    title: str = "",
+    xlabel: str = "",
+    ylabel: str = "",
+    name: str = "",
+    percentage: bool = False,
+    show_stdev: bool = False,
+) -> Axes:
+    if ax is None:
+        ax = gca()
+    ax = set_chart_labels(ax=ax, title=title, xlabel=xlabel, ylabel=ylabel)
+    ax = set_chart_xticks(xvalues, ax, percentage=percentage)
+    if any(y < 0 for y in yvalues) and percentage:
+            ax.set_ylim(-1.0, 1.0)
+    ax.plot(xvalues, yvalues, c=LINE_COLOR, label=name)
+    if show_stdev:
+        stdev: float = round(std(yvalues), 3)
+        y_bottom: list[float] = [(y - stdev) for y in yvalues]
+        y_top: list[float] = [(y + stdev) for y in yvalues]
+        ax.fill_between(xvalues, y_bottom, y_top, color=FILL_COLOR, alpha=0.2)
+    return ax
 
 LAG: int = 500
 NR_MAX_ITER: int = 5000
@@ -335,12 +318,11 @@ def mlp_study(
 
     return best_model, best_params
 
-
 file_tag = "financial"
 train_filename = "financial_train.csv"
 test_filename = "financial_test.csv"
 target = "CLASS"
-eval_metric = "accuracy"
+eval_metric = "recall"
 
 trnX, tstX, trnY, tstY, labels, vars = read_train_test_from_files(
     train_filename, test_filename, target
@@ -360,3 +342,59 @@ best_model, params = mlp_study(
 )
 savefig(f"Projeto/Modeling/Mulit-Layer/{file_tag}_mlp_{eval_metric}_study.png")
 show()
+
+prd_trn: array = best_model.predict(trnX)
+prd_tst: array = best_model.predict(tstX)
+figure()
+plot_evaluation_results(params, trnY, prd_trn, tstY, prd_tst, labels)
+savefig(f'Projeto/Modeling/Mulit-Layer/{file_tag}_mlp_{params["name"]}_best_{params["metric"]}_eval.png')
+show()
+
+lr_type: Literal["constant", "invscaling", "adaptive"] = params["params"][0]
+lr: float = params["params"][1]
+
+nr_iterations: list[int] = [LAG] + [i for i in range(2 * LAG, NR_MAX_ITER + 1, LAG)]
+
+y_tst_values: list[float] = []
+y_trn_values: list[float] = []
+acc_metric = "accuracy"
+
+warm_start: bool = False
+for n in nr_iterations:
+    clf = MLPClassifier(
+        warm_start=warm_start,
+        learning_rate=lr_type,
+        learning_rate_init=lr,
+        max_iter=n,
+        activation="logistic",
+        solver="sgd",
+        verbose=False,
+    )
+    clf.fit(trnX, trnY)
+    prd_tst_Y: array = clf.predict(tstX)
+    prd_trn_Y: array = clf.predict(trnX)
+    y_tst_values.append(CLASS_EVAL_METRICS[acc_metric](tstY, prd_tst_Y))
+    y_trn_values.append(CLASS_EVAL_METRICS[acc_metric](trnY, prd_trn_Y))
+    warm_start = True
+
+figure()
+plot_multiline_chart(
+    nr_iterations,
+    {"Train": y_trn_values, "Test": y_tst_values},
+    title=f"MLP overfitting study for lr_type={lr_type} and lr={lr}",
+    xlabel="nr_iterations",
+    ylabel=str(eval_metric),
+    percentage=True,
+)
+savefig(f"Projeto/Modeling/Mulit-Layer/{file_tag}_mlp_{eval_metric}_overfitting.png")
+
+figure()
+plot_line_chart(
+    arange(len(best_model.loss_curve_)),
+    best_model.loss_curve_,
+    title="Loss curve for MLP best model training",
+    xlabel="iterations",
+    ylabel="loss",
+    percentage=False,
+)
+savefig(f"Projeto/Modeling/Mulit-Layer/{file_tag}_mlp_{eval_metric}_loss_curve.png")
