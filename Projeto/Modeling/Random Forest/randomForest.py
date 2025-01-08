@@ -409,7 +409,7 @@ plot_horizontal_bar_chart(
     ylabel="variables",
     percentage=True,
 )
-savefig(f"images/{file_tag}_rf_{eval_metric}_vars_ranking.png")
+savefig(f"Projeto/Modeling/Random Forest/{file_tag}_rf_{eval_metric}_vars_ranking.png")
 
 plot_multiline_chart(
     nr_estimators,

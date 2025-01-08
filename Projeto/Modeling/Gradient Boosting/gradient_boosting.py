@@ -320,7 +320,7 @@ file_tag = "financial"
 train_filename = "financial_train.csv"
 test_filename = "financial_test.csv"
 target = "CLASS"
-eval_metric = "precision"
+eval_metric = "accuracy"
 
 trnX, tstX, trnY, tstY, labels, vars = read_train_test_from_files(
     train_filename, test_filename, target
