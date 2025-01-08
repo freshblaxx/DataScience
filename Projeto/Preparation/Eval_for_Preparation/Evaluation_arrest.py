@@ -115,18 +115,18 @@ def plot_multibar_chart_comparison(
 
 
 # Load datasets
-train1 = read_csv("/Users/tomifemme/Desktop/DataScience/Projeto/Preparation/Eval_for_Preparation/class_arrests_SMOTE.csv")
-test1 = read_csv("/Users/tomifemme/Desktop/DataScience/Projeto/Preparation/Eval_for_Preparation/Arrests_testing_data_arrest.csv")
-train2 = read_csv("/Users/tomifemme/Desktop/DataScience/Projeto/Preparation/Eval_for_Preparation/class_ny_arrest_under.csv")
-test2 = read_csv("/Users/tomifemme/Desktop/DataScience/Projeto/Preparation/Eval_for_Preparation/Arrests_testing_data_arrest.csv")
+train1 = read_csv("/Users/tomifemme/Desktop/DataScience/Projeto/Preparation/Data Balancing/class_arrests_SMOTE.csv")
+test1 = read_csv("/Users/tomifemme/Desktop/DataScience/Projeto/Preparation/Eval_for_Preparation/Arrests_testing_data.csv")
+train2 = read_csv("/Users/tomifemme/Desktop/DataScience/Projeto/Preparation/Data Balancing/class_ny_arrest_under.csv")
+test2 = read_csv("/Users/tomifemme/Desktop/DataScience/Projeto/Preparation/Eval_for_Preparation/Arrests_testing_data.csv")
 
 figure()
 eval_results = evaluate_approaches(train1, test1, train2, test2, target="CLASS", metric="recall")
 plot_multibar_chart_comparison(
     ["NB1", "KNN1", "NB2", "KNN2"],
     eval_results,
-    title="Comparison of Methods on Two Datasets",
-    xlabel="Methods",
+    title="Comparison of Balancing methods",
+    xlabel="SMOTE vs Undersampling",
     ylabel="Scores",
     percentage=True
 )

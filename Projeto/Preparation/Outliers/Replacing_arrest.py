@@ -52,7 +52,7 @@ def replace_outliers_with_median(
     return df, outliers_info
 
 # Example usage
-data: DataFrame = read_csv("/Users/tomifemme/Desktop/DataScience/Projeto/Preparation/Outliers/data_filled.csv")
+data: DataFrame = read_csv("/Users/tomifemme/Desktop/DataScience/Projeto/Preparation/Outliers/data_cleaned.csv")
 
 variable_types = get_variable_types(data)
 print("Variable Types:", variable_types)
