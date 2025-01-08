@@ -339,14 +339,14 @@ best_model, params = gradient_boosting_study(
     metric=eval_metric,
 )
 savefig(f"Projeto/Modeling/Gradient Boosting/{file_tag}_gb_{eval_metric}_study.png")
-show()
+
 
 prd_trn: array = best_model.predict(trnX)
 prd_tst: array = best_model.predict(tstX)
 figure()
 plot_evaluation_results(params, trnY, prd_trn, tstY, prd_tst, labels)
 savefig(f'Projeto/Modeling/Gradient Boosting/{file_tag}_gb_{params["name"]}_best_{params["metric"]}_eval.png')
-show()
+
 
 d_max: int = params["params"][0]
 lr: float = params["params"][1]
