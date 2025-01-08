@@ -1,4 +1,4 @@
-from numpy import array, ndarray
+from numpy import array, ndarray, argsort
 from matplotlib.pyplot import subplots, figure, savefig, show
 from sklearn.ensemble import RandomForestClassifier
 from numpy import array, ndarray
@@ -181,6 +181,30 @@ def plot_bar_chart(
 
     return ax
 
+def plot_horizontal_bar_chart(
+    elements: list,
+    values: list,
+    error: list = [],
+    ax: Axes = None,  # type: ignore
+    title: str = "",
+    xlabel: str = "",
+    ylabel: str = "",
+    percentage: bool = False,
+) -> Axes:
+    if ax is None:
+        ax = gca()
+    if percentage:
+        ax.set_xlim((0, 1))
+    if error == []:
+        error = [0] * len(elements)
+    ax = set_chart_labels(ax=ax, title=title, xlabel=xlabel, ylabel=ylabel)
+    y_pos: list = list(arange(len(elements)))
+
+    ax.barh(y_pos, values, xerr=error, align="center", error_kw={"lw": 0.5, "ecolor": "r"})
+    ax.set_yticks(y_pos, labels=elements)
+    ax.invert_yaxis()  # labels read top-to-bottom
+    return ax
+
 def plot_multibar_chart(
     group_labels: list,
     yvalues: dict,
@@ -317,7 +341,7 @@ file_tag = "financial"
 train_filename = "financial_train.csv"
 test_filename = "financial_test.csv"
 target = "CLASS"
-eval_metric = "precision"
+eval_metric = "recall"
 
 trnX, tstX, trnY, tstY, labels, vars = read_train_test_from_files(
     train_filename, test_filename, target
@@ -362,6 +386,31 @@ for n in nr_estimators:
     y_trn_values.append(CLASS_EVAL_METRICS[acc_metric](trnY, prd_trn_Y))
 
 figure()
+
+stdevs: list[float] = list(
+    std([tree.feature_importances_ for tree in best_model.estimators_], axis=0)
+)
+importances = best_model.feature_importances_
+indices: list[int] = argsort(importances)[::-1]
+elems: list[str] = []
+imp_values: list[float] = []
+for f in range(len(vars)):
+    elems += [vars[indices[f]]]
+    imp_values.append(importances[indices[f]])
+    print(f"{f+1}. {elems[f]} ({importances[indices[f]]})")
+
+figure()
+plot_horizontal_bar_chart(
+    elems,
+    imp_values,
+    error=stdevs,
+    title="RF variables importance",
+    xlabel="importance",
+    ylabel="variables",
+    percentage=True,
+)
+savefig(f"images/{file_tag}_rf_{eval_metric}_vars_ranking.png")
+
 plot_multiline_chart(
     nr_estimators,
     {"Train": y_trn_values, "Test": y_tst_values},
