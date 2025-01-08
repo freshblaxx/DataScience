@@ -27,11 +27,11 @@ def split_and_save_data(file_path: str, file_tag: str, test_size: float = 0.30, 
 
 
 # Paths to your datasets
-file_path1 = "/Users/tomifemme/Desktop/DataScience/Projeto/Preparation/Eval_for_Preparation/arrests_scaled_minmax_arrest.csv"
-file_tag1 = "Arrests_Option_1"
+file_path1 = "/Users/tomifemme/Desktop/DataScience/Projeto/Preparation/Scaling/arrests_scaled_minmax_arrest.csv"
+file_tag1 = "MinMax_scaled_arrests"
 
-file_path2 = "/Users/tomifemme/Desktop/DataScience/Projeto/Preparation/Eval_for_Preparation/arrests_scaled_zscore_arrest.csv"
-file_tag2 = "Arrests_Option_2"
+file_path2 = "/Users/tomifemme/Desktop/DataScience/Projeto/Preparation/Scaling/arrests_scaled_zscore_arrest.csv"
+file_tag2 = "Zscore_scaled_arrests"
 
 # Split and save both datasets
 split_and_save_data(file_path1, file_tag1)
