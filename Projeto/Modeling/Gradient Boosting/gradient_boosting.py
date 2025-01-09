@@ -320,7 +320,7 @@ file_tag = "financial"
 train_filename = "financial_train.csv"
 test_filename = "financial_test.csv"
 target = "CLASS"
-eval_metric = "precision"
+eval_metric = "accuracy"
 
 trnX, tstX, trnY, tstY, labels, vars = read_train_test_from_files(
     train_filename, test_filename, target
@@ -339,14 +339,14 @@ best_model, params = gradient_boosting_study(
     metric=eval_metric,
 )
 savefig(f"Projeto/Modeling/Gradient Boosting/{file_tag}_gb_{eval_metric}_study.png")
-show()
+
 
 prd_trn: array = best_model.predict(trnX)
 prd_tst: array = best_model.predict(tstX)
 figure()
 plot_evaluation_results(params, trnY, prd_trn, tstY, prd_tst, labels)
 savefig(f'Projeto/Modeling/Gradient Boosting/{file_tag}_gb_{params["name"]}_best_{params["metric"]}_eval.png')
-show()
+
 
 d_max: int = params["params"][0]
 lr: float = params["params"][1]

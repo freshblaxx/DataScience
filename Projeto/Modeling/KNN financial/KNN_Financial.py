@@ -264,7 +264,7 @@ def plot_multiline_chart(
 def knn_study(
         trnX: ndarray, trnY: array, tstX: ndarray, tstY: array, k_max: int=19, lag: int=2, metric='accuracy'
         ) -> tuple[KNeighborsClassifier | None, dict]:
-    dist: list[Literal['euclidean']] = ['euclidean']
+    dist: list[Literal['manhattan', 'euclidean', 'chebyshev']] = ['manhattan', 'euclidean', 'chebyshev']
 
     kvalues: list[int] = [i for i in range(1, k_max+1, lag)]
     best_model: KNeighborsClassifier | None = None
@@ -305,14 +305,14 @@ print(f'Labels={labels}')
 figure()
 best_model, params = knn_study(trnX, trnY, tstX, tstY, k_max=25, metric=eval_metric)
 savefig(f'Projeto/Modeling/KNN financial/{file_tag}_knn_{eval_metric}_study.png')
-show()
+
 
 prd_trn: array = best_model.predict(trnX)
 prd_tst: array = best_model.predict(tstX)
 figure()
 plot_evaluation_results(params, trnY, prd_trn, tstY, prd_tst, labels)
 savefig(f'Projeto/Modeling/KNN financial/{file_tag}_knn_{params["name"]}_best_{params["metric"]}_eval.png')
-show()
+
 
 
 distance: Literal["manhattan", "euclidean", "chebyshev"] = params["params"][1]
@@ -339,4 +339,3 @@ plot_multiline_chart(
     percentage=True,
 )
 savefig(f"Projeto/Modeling/KNN financial/{file_tag}_knn_overfitting.png")
-show()
